@@ -8,11 +8,11 @@ A deep learning pipeline for FH-dRCC diagnosis in whole-slide histopathology ima
 
 ## Data Preparation
 ### Directory Structure
-data/
-├── patient_01.svs
-├── patient_02.svs
++data
+ -patient_01.svs
+ -patient_02.svs
 ...
-annotations/
-├── patient_01.geojson
-├── patient_02.geojson
++annotations
+ -patient_01.geojson
+ -patient_02.geojson
 ...
