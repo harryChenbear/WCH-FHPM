@@ -6,23 +6,6 @@ A deep learning pipeline for FH-dRCC diagnosis in whole-slide histopathology ima
 - OpenSlide (Windows/Linux)
 - CUDA-enabled GPU (recommended)
 
-## Installation
-```bash
-# Clone repository
-git clone https://github.com/yourusername/rcc-detection.git
-cd rcc-detection
-
-# Install dependencies
-conda create -n rcc python=3.8
-conda activate rcc
-pip install -r requirements.txt
-
-# Install OpenSlide
-## Windows
-conda install -c conda-forge openslide
-## Linux
-sudo apt-get install openslide-tools
-
 ## Data Preparation
 ### Directory Structure
 data/
