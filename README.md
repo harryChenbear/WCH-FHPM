@@ -7,12 +7,22 @@ A deep learning pipeline for FH-dRCC diagnosis in whole-slide histopathology ima
 - CUDA-enabled GPU (recommended)
 
 ## Data Preparation
-### Directory Structure
-+data
- -patient_01.svs
- -patient_02.svs
-...
-+annotations
- -patient_01.geojson
- -patient_02.geojson
-...
+📁 data/ <i>(Whole Slide Images)</i>
+
+├── 🔬 patient_01.svs
+
+├── 🔬 patient_02.svs
+
+└── ⋮
+
+📁 annotations/ <i>(Pathology annotations)</i>
+
+├── 🏷️ patient_01.geojson
+
+├── 🏷️ patient_02.geojson
+
+└── ⋮
+
+## Data Requirements
+- SVS whole-slide images (40x magnification)
+- GeoJSON annotations containing normal kidney regions
