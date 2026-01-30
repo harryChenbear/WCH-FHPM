@@ -53,6 +53,7 @@ class RCCDataset(Dataset):
 
 data_transform = transforms.Compose([
     transforms.ToPILImage(),
+    transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
@@ -105,33 +106,49 @@ def extract_patches_from_svs(svs_path, annotation_path, patch_size=patch_size, t
     return patches, labels, rcc_patches, rcc_labels
 
 def prepare_dataset(data_dir, annotation_dir):
-    svs_files = [f for f in os.listdir(data_dir) if f.endswith(".svs")]
-    annotation_files = [f for f in os.listdir(annotation_dir) if f.endswith(".geojson")]
-    all_patches = []
-    all_labels = []
-    all_rcc_patches = []
-    all_rcc_labels = []
-    for svs_file, annotation_file in zip(svs_files, annotation_files):
-        svs_path = os.path.join(data_dir, svs_file)
-        annotation_path = os.path.join(annotation_dir, annotation_file)
-        patches, labels, rcc_patches, rcc_labels = extract_patches_from_svs(svs_path, annotation_path)
-        all_patches.extend(patches)
-        all_labels.extend(labels)
-        all_rcc_patches.extend(rcc_patches)
-        all_rcc_labels.extend(rcc_labels)
-    normal_train_patches, normal_val_patches, normal_train_labels, normal_val_labels = train_test_split(all_patches, all_labels, test_size=0.2, random_state=42)
-    rcc_train_patches, rcc_val_patches, rcc_train_labels, rcc_val_labels = train_test_split(all_rcc_patches, all_rcc_labels, test_size=0.2, random_state=42)
+    svs_files = sorted([f for f in os.listdir(data_dir) if f.endswith(".svs")])
+    annotation_files = sorted([f for f in os.listdir(annotation_dir) if f.endswith(".geojson")])
+    
+    # Pair them up - strictly assuming files are corresponding if sorted
+    # A robust implementation would match filenames
+    data_pairs = list(zip(svs_files, annotation_files))
+    
+    # Split at Slide/Patient level
+    train_pairs, val_pairs = train_test_split(data_pairs, test_size=0.2, random_state=42)
+    
+    def process_pairs(pairs):
+        all_patches = []
+        all_labels = []
+        all_rcc_patches = []
+        all_rcc_labels = []
+        
+        for svs_file, annotation_file in pairs:
+            svs_path = os.path.join(data_dir, svs_file)
+            annotation_path = os.path.join(annotation_dir, annotation_file)
+            patches, labels, rcc_patches, rcc_labels = extract_patches_from_svs(svs_path, annotation_path)
+            all_patches.extend(patches)
+            all_labels.extend(labels)
+            all_rcc_patches.extend(rcc_patches)
+            all_rcc_labels.extend(rcc_labels)
+        return all_patches, all_labels, all_rcc_patches, all_rcc_labels
+
+    print("Processing Training Pairs...")
+    normal_train_patches, normal_train_labels, rcc_train_patches, rcc_train_labels = process_pairs(train_pairs)
+    print("Processing Validation Pairs...")
+    normal_val_patches, normal_val_labels, rcc_val_patches, rcc_val_labels = process_pairs(val_pairs)
+
     normal_train_dataset = RCCDataset(normal_train_patches, normal_train_labels, transform=data_transform)
     normal_val_dataset = RCCDataset(normal_val_patches, normal_val_labels, transform=data_transform)
     rcc_train_dataset = RCCDataset(rcc_train_patches, rcc_train_labels, transform=data_transform)
     rcc_val_dataset = RCCDataset(rcc_val_patches, rcc_val_labels, transform=data_transform)
+    
     return normal_train_dataset, normal_val_dataset, rcc_train_dataset, rcc_val_dataset
 
 def train_normal_tumor_model(train_dataset, val_dataset, batch_size=batch_size, num_epochs=num_epochs, learning_rate=learning_rate, model_save_path="normal_tumor_model.pth"):
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=False)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=False)
     model = ViTForImageClassification.from_pretrained("google/vit-base-patch16-224", num_labels=2, ignore_mismatched_sizes=True)
-    optimizer = AdamW(model.parameters(), lr=learning_rate)
+    optimizer = AdamW(model.parameters(), lr=learning_rate, weight_decay=0)
     scheduler = CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=0)
     criterion = nn.CrossEntropyLoss()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
