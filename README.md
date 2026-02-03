@@ -67,7 +67,7 @@ The script includes functions for:
 python WCH-FHPMproject.py
 ```
 
-![Wordflow](<Figure 1 .png>)
+![Wordflow](<workflow.png>)
 
 ## Online Web Platform
 
