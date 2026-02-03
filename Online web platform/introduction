@@ -1,0 +1,58 @@
+# WCH-FHPM User Manual
+
+
+WCH-FHPM Online platform
+
+
+To enable the practical application of WCH-FHPM in clinical settings, we developed a user-friendly web platform (https://wchrcc.ai4ss.com/) allowing users to upload WSIs and receive probability predictions for FH-dRCC. 
+
+
+
+## 2.1 Operating steps
+
+### Step 1: Uploading Whole Slide Images (WSIs)
+This website predicts the likelihood of FH-deficient renal cell carcinoma (FH-dRCC) using an AI model (WCH-FHPM), by analyzing pathological features from whole slide images (WSIs) of hematoxylin-eosin (H&E) stained tumor tissue slides. Users can click the "User Guidelines" option at the bottom of the webpage to learn how to use the website. To begin tumor prediction, you first need to upload the corresponding WSI files of the patient’s H&E slides, which MUST meet the following requirements:
+
+1. The WSI file must be gained from a primary renal tumor; the website currently does not support predictions for recurrent or metastatic lesions.
+2. The file format should be SVS, NDPI, or TIF.
+3. The file size must be at least 100 MB.
+4. Only one WSI can be uploaded at a time. If multiple images need to be predicted, they should be uploaded one by one.
+
+**Note: The following conditions may affect prediction accuracy:**
+1. Limited tumor areas in the WSI image.
+2. Significant hemorrhage feature within the image.
+3. Poor quality of the H&E-stained slides, such as contamination, large area damage, tissues overlapping, fading, or over-staining due to excessively thick slices.
+
+Once you have prepared the WSI files that meet the above requirements, click the "Upload WSI File" option in the upload area on the left side of the page, select the corresponding file, and wait for the upload to complete.
+
+**Note:** Upload time depends on file size and your current network conditions.
+
+### Step 2: Running the Prediction Program
+After successfully uploading the WSI file, you can find a preview image of the file in the left upload area, and you should verify that it matches the intended H&E slide. Once confirmed, click the "Click to Predict" option above the results area on the right to submit the prediction task. The task status will be displayed in the status bar. After submitting the prediction task, users can repeat the above steps to submit other tasks. The system will process them in the order they were submitted.
+
+### Step 3: Viewing and Interpreting Prediction Results
+Once the upload task is completed, the status bar will display "Run Successful." Users can view the heatmap comprised of the prediction results of the patches, which are the model’s minimum diagnostic units, in the output area on the right. The probability of the FH-dRCC will also be displayed below the output area.
+
+## 2.2 Interpretation guidelines:
+
+### (1) Prediction Process
+**Step 1:** The system identifies and distinguishes normal tissue, tumor, and tumor-related tissues in the WSI, excluding normal tissue areas. It then predicts the probability of FH-dRCC based on the tumor and tumor-related tissues.
+**Step 2:** The model calculates the probability of FH-deficient RCC for each patch and outputs the final prediction probability by averaging the probabilities of all patches.
+
+### (2) Visual Heatmap Interpretation
+In the heatmap, each grid represents a patch, and the color indicate the probability of FH-dRCC. The color mapping can be referenced in the bar on the right side of the results area. Users can observe the predicted probability distribution across the WSI and use this information to examine the pathological features in areas with high or low predicted values, aiding in pathological diagnosis.
+
+### (3) Overall Prediction Probability Interpretation
+The overall prediction probability is the average of the probabilities for all the patched in the WSI. According to this study’s findings, a threshold of 0.5 is used: a prediction probability ≥ 0.5 indicates a high risk of FH-dRCC.
+
+## 2.3 Important Notes:
+The three steps above describe the basic process for using the website’s AI model to predict the probability of FH-dRCC. Additionally, please note the following:
+
+1. This platform does not collect or store any patient-related information, and the uploaded WSIs are not stored on the server of the website. Using patient WSIs for prediction is the responsibility of the user and requires ethical approval and informed consent from the patient.
+2. Although the prediction model shows high accuracy in our previous testing, the results should only be used as a reference and should not be considered as the evidence of the final diagnosis. The standard diagnosis of FH-dRCC should rely on the gold standard.
+3. Despite extensive testing, the platform may still have areas needing improvement or maintenance. If any issues arise, please contact the team leader via email at WCH_FHPM@163.com for feedback.
+
+
+![Online web platform](<Figure 5_01.png>)
+
+![WCH-FHPM User Manual](image.png)

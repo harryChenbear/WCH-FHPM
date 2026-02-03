@@ -66,3 +66,18 @@ The script includes functions for:
 # Run the main script to perform prediction on test data
 python WCH-FHPMproject.py
 ```
+
+![Wordflow](<Figure 1 .png>)
+
+## Online Web Platform
+
+To facilitate clinical use, we have deployed the WCH-FHPM model as an online web service (https://wchrcc.ai4ss.com/).
+
+### Operational Guidelines
+1.  **Upload WSI**: Support for SVS, NDPI, or TIF formats (>100MB) of primary renal tumor H&E slides.
+2.  **Analysis**: The system processes the image to distinguish tumor tissue and predicts FH-dRCC probability.
+3.  **Interpretation**:
+    *   **Heatmap**: Visualizes the probability distribution across tumor regions.
+    *   **Score**: An overall probability ≥ 0.5 suggests a high risk of FH-dRCC.
+
+*Disclaimer: This tool allows for privacy-preserving analysis (data is not stored) and is intended for research reference, not as a standalone diagnostic confirmation.*
