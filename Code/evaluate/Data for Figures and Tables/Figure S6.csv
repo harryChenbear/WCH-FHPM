@@ -1,0 +1,724 @@
+Pts ID,Dataset,true_labels,pred_probs,pred_labels
+Case0103,Dataset2---Internal Testing,1,0.703918578,1
+Case0104,Dataset2---Internal Testing,1,0.9999,1
+Case0105,Dataset2---Internal Testing,1,0.9999,1
+Case0106,Dataset2---Internal Testing,1,0.9999,1
+Case0107,Dataset2---Internal Testing,1,0.9999,1
+Case0108,Dataset2---Internal Testing,1,0.9999,1
+Case0108,Dataset2---Internal Testing,1,0.9999,1
+Case0109,Dataset2---Internal Testing,1,0.287120686,0
+Case0110,Dataset2---Internal Testing,0,0.095315314,0
+Case0111,Dataset2---Internal Testing,1,0.14919812,0
+Case0112,Dataset2---Internal Testing,0,0.071361224,0
+Case0112,Dataset2---Internal Testing,0,0.048135668,0
+Case0113,Dataset2---Internal Testing,0,0.106299581,0
+Case0114,Dataset2---Internal Testing,0,0.254566443,0
+Case0115,Dataset2---Internal Testing,0,0.19413637,0
+Case0115,Dataset2---Internal Testing,0,0.186205023,0
+Case0115,Dataset2---Internal Testing,0,0.158347769,0
+Case0115,Dataset2---Internal Testing,0,0.09020145,0
+Case0116,Dataset2---Internal Testing,0,0.0978994,0
+Case0117,Dataset2---Internal Testing,0,0.205317135,0
+Case0118,Dataset2---Internal Testing,0,0.555761308,1
+Case0118,Dataset2---Internal Testing,0,0.481987395,0
+Case0118,Dataset2---Internal Testing,0,0.265302265,0
+Case0118,Dataset2---Internal Testing,0,0.216770258,0
+Case0119,Dataset2---Internal Testing,0,0.650236481,1
+Case0119,Dataset2---Internal Testing,0,0.314357113,0
+Case0119,Dataset2---Internal Testing,0,0.204909984,0
+Case0120,Dataset2---Internal Testing,1,0.9999,1
+Case0121,Dataset2---Internal Testing,1,0.922887609,1
+Case0121,Dataset2---Internal Testing,1,0.783016687,1
+Case0121,Dataset2---Internal Testing,1,0.724115261,1
+Case0122,Dataset2---Internal Testing,0,0.199439077,0
+Case0123,Dataset2---Internal Testing,0,0.104915686,0
+Case0124,Dataset2---Internal Testing,0,0.066237014,0
+Case0125,Dataset2---Internal Testing,0,0.092582366,0
+Case0126,Dataset2---Internal Testing,0,0.055403151,0
+Case0127,Dataset2---Internal Testing,0,0.064254564,0
+Case0128,Dataset2---Internal Testing,0,0.121506435,0
+Case0129,Dataset2---Internal Testing,0,0.059138426,0
+Case0130,Dataset2---Internal Testing,0,0.034223562,0
+Case0131,Dataset2---Internal Testing,0,0.065828864,0
+Case0132,Dataset2---Internal Testing,1,0.219497883,0
+Case0133,Dataset2---Internal Testing,0,0.165507821,0
+Case0134,Dataset2---Internal Testing,1,0.9999,1
+Case0135,Dataset2---Internal Testing,1,0.728056711,1
+Case0136,Dataset2---Internal Testing,0,0.135663843,0
+Case0137,Dataset2---Internal Testing,1,0.765442085,1
+Case0138,Dataset2---Internal Testing,0,0.207079347,0
+Case0139,Dataset2---Internal Testing,0,0.25805429,0
+Case0140,Dataset2---Internal Testing,0,0.138351345,0
+Case0141,Dataset2---Internal Testing,1,0.9999,1
+Case0142,Dataset2---Internal Testing,0,0.105217778,0
+Case0142,Dataset2---Internal Testing,0,0.09416652,0
+Case0142,Dataset2---Internal Testing,0,0.049596443,0
+Case0143,Dataset2---Internal Testing,0,0.29112748,0
+Case0143,Dataset2---Internal Testing,0,0.21389027,0
+Case0143,Dataset2---Internal Testing,0,0.210001507,0
+Case0143,Dataset2---Internal Testing,0,0.126537273,0
+Case0144,Dataset2---Internal Testing,1,0.963110046,1
+Case0145,Dataset2---Internal Testing,0,0.127946708,0
+Case0146,Dataset2---Internal Testing,0,0.308987255,0
+Case0146,Dataset2---Internal Testing,0,0.211822727,0
+Case0146,Dataset2---Internal Testing,0,0.156913963,0
+Case0147,Dataset2---Internal Testing,1,0.9999,1
+Case0148,Dataset2---Internal Testing,1,0.9999,1
+Case0148,Dataset2---Internal Testing,1,0.801168003,1
+Case0148,Dataset2---Internal Testing,1,0.753380337,1
+Case0149,Dataset2---Internal Testing,0,0.045880338,0
+Case0149,Dataset2---Internal Testing,0,0.034508444,0
+Case0150,Dataset2---Internal Testing,0,0.064365773,0
+Case0150,Dataset2---Internal Testing,0,0.04321105,0
+Case0151,Dataset2---Internal Testing,1,0.9999,1
+Case0151,Dataset2---Internal Testing,1,0.9999,1
+Case0152,Dataset2---Internal Testing,0,0.569249837,1
+Case0153,Dataset2---Internal Testing,0,0.877639997,1
+Case0154,Dataset2---Internal Testing,1,0.981189933,1
+Case0154,Dataset2---Internal Testing,1,0.799810134,1
+Case0155,Dataset2---Internal Testing,0,0.312526555,0
+Case0156,Dataset2---Internal Testing,1,0.9999,1
+Case0157,Dataset2---Internal Testing,0,0.166474691,0
+Case0157,Dataset2---Internal Testing,0,0.157759485,0
+Case0157,Dataset2---Internal Testing,0,0.094758186,0
+Case0158,Dataset2---Internal Testing,0,0.279385667,0
+Case0158,Dataset2---Internal Testing,0,0.207530253,0
+Case0158,Dataset2---Internal Testing,0,0.176332196,0
+Case0159,Dataset2---Internal Testing,0,0.123374294,0
+Case0159,Dataset2---Internal Testing,0,0.101609329,0
+Case0159,Dataset2---Internal Testing,0,0.085723161,0
+Case0160,Dataset2---Internal Testing,1,0.905175433,1
+Case0160,Dataset2---Internal Testing,1,0.885025354,1
+Case0161,Dataset2---Internal Testing,0,0.094681942,0
+Case0161,Dataset2---Internal Testing,0,0.081171637,0
+Case0161,Dataset2---Internal Testing,0,0.062925982,0
+Case0162,Dataset2---Internal Testing,0,0.505140936,1
+Case0162,Dataset2---Internal Testing,0,0.236625086,0
+Case0163,Dataset2---Internal Testing,0,0.03761904,0
+Case0164,Dataset2---Internal Testing,0,0.129307443,0
+Case0164,Dataset2---Internal Testing,0,0.11018009,0
+Case0164,Dataset2---Internal Testing,0,0.062711925,0
+Case0165,Dataset2---Internal Testing,0,0.044574442,0
+Case0166,Dataset2---Internal Testing,0,0.075141905,0
+Case0167,Dataset2---Internal Testing,0,0.034545036,0
+Case0168,Dataset2---Internal Testing,1,0.815079015,1
+Case0168,Dataset2---Internal Testing,1,0.729660786,1
+Case0169,Dataset2---Internal Testing,0,0.239514296,0
+Case0169,Dataset2---Internal Testing,0,0.165098221,0
+Case0169,Dataset2---Internal Testing,0,0.074403994,0
+Case0170,Dataset2---Internal Testing,0,0.082106074,0
+Case0171,Dataset2---Internal Testing,0,0.104553069,0
+Case0171,Dataset2---Internal Testing,0,0.102929834,0
+Case0171,Dataset2---Internal Testing,0,0.038521404,0
+Case0172,Dataset2---Internal Testing,0,0.056689706,0
+Case0173,Dataset2---Internal Testing,0,0.047877309,0
+Case0174,Dataset2---Internal Testing,1,0.167333876,0
+Case0175,Dataset2---Internal Testing,0,0.056321386,0
+Case0176,Dataset2---Internal Testing,0,0.081764871,0
+Case0177,Dataset2---Internal Testing,0,0.181763691,0
+Case0177,Dataset2---Internal Testing,0,0.071085452,0
+Case0178,Dataset2---Internal Testing,1,0.9999,1
+Case0178,Dataset2---Internal Testing,1,0.9999,1
+Case0178,Dataset2---Internal Testing,1,0.910689605,1
+Case0179,Dataset2---Internal Testing,0,0.087091306,0
+Case0179,Dataset2---Internal Testing,0,0.038803212,0
+Case0180,Dataset2---Internal Testing,0,0.085564006,0
+Case0181,Dataset2---Internal Testing,0,0.04726784,0
+Case0182,Dataset2---Internal Testing,0,0.067480869,0
+Case0183,Dataset2---Internal Testing,0,0.079339605,0
+Case0183,Dataset2---Internal Testing,0,0.078376271,0
+Case0183,Dataset2---Internal Testing,0,0.068528078,0
+Case0184,Dataset2---Internal Testing,1,0.9999,1
+Case0184,Dataset2---Internal Testing,1,0.930691207,1
+Case0184,Dataset2---Internal Testing,1,0.808747894,1
+Case0185,Dataset2---Internal Testing,1,0.9999,1
+Case0185,Dataset2---Internal Testing,1,0.9999,1
+Case0185,Dataset2---Internal Testing,1,0.812178209,1
+Case0186,Dataset2---Internal Testing,1,0.825338024,1
+Case0187,Dataset2---Internal Testing,1,0.9999,1
+Case0188,Dataset2---Internal Testing,1,0.833500969,1
+Case0189,Dataset2---Internal Testing,1,0.839291174,1
+Case0190,Dataset2---Internal Testing,1,0.735737027,1
+Case0191,Dataset2---Internal Testing,0,0.031042012,0
+Case0192,Dataset2---Internal Testing,0,0.151237613,0
+Case0192,Dataset2---Internal Testing,0,0.130585403,0
+Case0193,Dataset2---Internal Testing,0,0.038314415,0
+Case0194,Dataset2---Internal Testing,0,0.114439857,0
+Case0194,Dataset2---Internal Testing,0,0.102994974,0
+Case0195,Dataset2---Internal Testing,0,0.038335261,0
+Case0196,Dataset2---Internal Testing,0,0.095837393,0
+Case0197,Dataset2---Internal Testing,0,0.045804747,0
+Case0198,Dataset2---Internal Testing,0,0.293778288,0
+Case0199,Dataset2---Internal Testing,0,0.264724621,0
+Case0199,Dataset2---Internal Testing,0,0.159476459,0
+Case0199,Dataset2---Internal Testing,0,0.143048646,0
+Case0199,Dataset2---Internal Testing,0,0.092880953,0
+Case0200,Dataset2---Internal Testing,0,0.155205936,0
+Case0200,Dataset2---Internal Testing,0,0.104147553,0
+Case0201,Dataset2---Internal Testing,0,0.639988912,1
+Case0201,Dataset2---Internal Testing,0,0.552491129,1
+Case0201,Dataset2---Internal Testing,0,0.522321877,1
+Case0201,Dataset2---Internal Testing,0,0.178157578,0
+Case0202,Dataset2---Internal Testing,1,0.9999,1
+Case0202,Dataset2---Internal Testing,1,0.9999,1
+Case0202,Dataset2---Internal Testing,1,0.725185459,1
+Case0203,Dataset2---Internal Testing,0,0.684684489,1
+Case0203,Dataset2---Internal Testing,0,0.052142725,0
+Case0203,Dataset2---Internal Testing,0,0.02886449,0
+Case0203,Dataset2---Internal Testing,0,0.025105976,0
+Case0204,Dataset2---Internal Testing,0,0.255080988,0
+Case0204,Dataset2---Internal Testing,0,0.24728229,0
+Case0204,Dataset2---Internal Testing,0,0.22295483,0
+Case0205,Dataset2---Internal Testing,0,0.157816101,0
+Case0205,Dataset2---Internal Testing,0,0.13116272,0
+Case0205,Dataset2---Internal Testing,0,0.099831174,0
+Case0205,Dataset2---Internal Testing,0,0.094775663,0
+Case0206,Dataset2---Internal Testing,0,0.062030372,0
+Case0207,Dataset2---Internal Testing,0,0.70360593,1
+Case0207,Dataset2---Internal Testing,0,0.626756974,1
+Case0207,Dataset2---Internal Testing,0,0.618646004,1
+Case0208,Dataset2---Internal Testing,0,0.15464694,0
+Case0209,Dataset2---Internal Testing,1,0.9999,1
+Case0209,Dataset2---Internal Testing,1,0.94022656,1
+Case0209,Dataset2---Internal Testing,1,0.744461868,1
+Case0210,Dataset2---Internal Testing,0,0.132738151,0
+Case0210,Dataset2---Internal Testing,0,0.131056499,0
+Case0210,Dataset2---Internal Testing,0,0.109372151,0
+Case0210,Dataset2---Internal Testing,0,0.089358548,0
+Case0211,Dataset2---Internal Testing,0,0.568415595,1
+Case0211,Dataset2---Internal Testing,0,0.210063659,0
+Case0211,Dataset2---Internal Testing,0,0.18763867,0
+Case0212,Dataset2---Internal Testing,0,0.10895071,0
+Case0212,Dataset2---Internal Testing,0,0.107828631,0
+Case0212,Dataset2---Internal Testing,0,0.090088669,0
+Case0213,Dataset2---Internal Testing,1,0.933829101,1
+Case0214,Dataset2---Internal Testing,0,0.079534044,0
+Case0215,Dataset2---Internal Testing,0,0.498612529,0
+Case0215,Dataset2---Internal Testing,0,0.318200172,0
+Case0215,Dataset2---Internal Testing,0,0.299758663,0
+Case0215,Dataset2---Internal Testing,0,0.27312837,0
+Case0216,Dataset2---Internal Testing,0,0.30594669,0
+Case0217,Dataset2---Internal Testing,0,0.084619042,0
+Case0218,Dataset2---Internal Testing,0,0.130862637,0
+Case0218,Dataset2---Internal Testing,0,0.11084,0
+Case0218,Dataset2---Internal Testing,0,0.101421406,0
+Case0218,Dataset2---Internal Testing,0,0.099150476,0
+Case0219,Dataset2---Internal Testing,0,0.220899803,0
+Case0219,Dataset2---Internal Testing,0,0.204725737,0
+Case0219,Dataset2---Internal Testing,0,0.171072627,0
+Case0219,Dataset2---Internal Testing,0,0.170116606,0
+Case0220,Dataset2---Internal Testing,0,0.044182369,0
+Case0221,Dataset2---Internal Testing,1,0.9999,1
+Case0222,Dataset2---Internal Testing,0,0.161161959,0
+Case0222,Dataset2---Internal Testing,0,0.144198348,0
+Case0223,Dataset2---Internal Testing,0,0.174435165,0
+Case0223,Dataset2---Internal Testing,0,0.167332615,0
+Case0223,Dataset2---Internal Testing,0,0.141931566,0
+Case0223,Dataset2---Internal Testing,0,0.125058818,0
+Case0224,Dataset2---Internal Testing,1,0.872636543,1
+Case0225,Dataset2---Internal Testing,0,0.291451519,0
+Case0225,Dataset2---Internal Testing,0,0.281931898,0
+Case0225,Dataset2---Internal Testing,0,0.267182385,0
+Case0226,Dataset2---Internal Testing,0,0.10965023,0
+Case0226,Dataset2---Internal Testing,0,0.093855448,0
+Case0227,Dataset2---Internal Testing,0,0.0448377,0
+Case0227,Dataset2---Internal Testing,0,0.040285907,0
+Case0228,Dataset2---Internal Testing,0,0.114688046,0
+Case0229,Dataset2---Internal Testing,0,0.123289024,0
+Case0230,Dataset2---Internal Testing,0,0.049205492,0
+Case0231,Dataset2---Internal Testing,0,0.194457782,0
+Case0232,Dataset2---Internal Testing,0,0.206305363,0
+Case0232,Dataset2---Internal Testing,0,0.134485201,0
+Case0233,Dataset2---Internal Testing,0,0.56696943,1
+Case0233,Dataset2---Internal Testing,0,0.285182248,0
+Case0234,Dataset2---Internal Testing,0,0.180078674,0
+Case0235,Dataset2---Internal Testing,0,0.183454486,0
+Case0235,Dataset2---Internal Testing,0,0.133885917,0
+Case0235,Dataset2---Internal Testing,0,0.089511647,0
+Case0236,Dataset2---Internal Testing,0,0.520145507,1
+Case0237,Dataset2---Internal Testing,1,0.728961138,1
+Case0238,Dataset2---Internal Testing,1,0.657532412,1
+Case0239,Dataset2---Internal Testing,1,0.57441053,1
+Case0240,Dataset2---Internal Testing,1,0.87747957,1
+Case0240,Dataset2---Internal Testing,1,0.821369663,1
+Case0240,Dataset2---Internal Testing,1,0.774148333,1
+Case0240,Dataset2---Internal Testing,1,0.770977028,1
+Case0241,Dataset2---Internal Testing,1,0.045849343,0
+Case0242,Dataset2---Internal Testing,1,0.641215265,1
+Case0243,Dataset2---Internal Testing,1,0.99,1
+Case0243,Dataset2---Internal Testing,1,0.935083295,1
+Case0243,Dataset2---Internal Testing,1,0.903303484,1
+Case0243,Dataset2---Internal Testing,1,0.804518058,1
+Case0244,Dataset2---Internal Testing,1,0.860556746,1
+Case0244,Dataset2---Internal Testing,1,0.783402082,1
+Case0245,Dataset2---Internal Testing,1,0.715545022,1
+Case0245,Dataset2---Internal Testing,1,0.633655853,1
+Case0246,Dataset2---Internal Testing,1,0.783640107,1
+Case0246,Dataset2---Internal Testing,1,0.704548949,1
+Case0246,Dataset2---Internal Testing,1,0.688110426,1
+Case0246,Dataset2---Internal Testing,1,0.683988751,1
+Case0247,Dataset2---Internal Testing,1,0.976209797,1
+Case0247,Dataset2---Internal Testing,1,0.9260279,1
+Case0247,Dataset2---Internal Testing,1,0.675581637,1
+Case0247,Dataset2---Internal Testing,1,0.654394315,1
+Case0248,Dataset2---Internal Testing,1,0.936748486,1
+Case0248,Dataset2---Internal Testing,1,0.904458623,1
+Case0248,Dataset2---Internal Testing,1,0.714519201,1
+Case0248,Dataset2---Internal Testing,1,0.081266149,0
+Case0249,Dataset2---Internal Testing,1,0.874084961,1
+Case0249,Dataset2---Internal Testing,1,0.859946591,1
+Case0249,Dataset2---Internal Testing,1,0.666976965,1
+Case0250,Dataset2---Internal Testing,1,0.99,1
+Case0250,Dataset2---Internal Testing,1,0.868367712,1
+Case0251,Dataset2---Internal Testing,1,0.741044293,1
+Case0251,Dataset2---Internal Testing,1,0.740958671,1
+Case0252,Dataset2---Internal Testing,1,0.976092322,1
+Case0252,Dataset2---Internal Testing,1,0.824827224,1
+Case0253,Dataset2---Internal Testing,1,0.922226158,1
+Case0253,Dataset2---Internal Testing,1,0.822473261,1
+Case0253,Dataset2---Internal Testing,1,0.775521309,1
+Case0253,Dataset2---Internal Testing,1,0.163076796,0
+Case0254,Dataset2---Internal Testing,1,0.707848663,1
+Case0254,Dataset2---Internal Testing,1,0.705869913,1
+Case0254,Dataset2---Internal Testing,1,0.682086827,1
+Case0255,Dataset2---Internal Testing,1,0.936071365,1
+Case0255,Dataset2---Internal Testing,1,0.848724328,1
+Case0255,Dataset2---Internal Testing,1,0.733739857,1
+Case0255,Dataset2---Internal Testing,1,0.681289638,1
+Case0256,Dataset2---Internal Testing,0,0.022275591,0
+Case0256,Dataset2---Internal Testing,0,0.01,0
+Case0257,Dataset2---Internal Testing,0,0.048388575,0
+Case0258,Dataset2---Internal Testing,0,0.01,0
+Case0259,Dataset2---Internal Testing,0,0.611823956,1
+Case0259,Dataset2---Internal Testing,0,0.106088546,0
+Case0260,Dataset2---Internal Testing,0,0.01,0
+Case0260,Dataset2---Internal Testing,0,0.01,0
+Case0261,Dataset2---Internal Testing,1,0.948305852,1
+Case0261,Dataset2---Internal Testing,1,0.789697472,1
+Case0261,Dataset2---Internal Testing,1,0.647833367,1
+Case0261,Dataset2---Internal Testing,1,0.092328111,0
+Case0262,Dataset2---Internal Testing,0,0.01,0
+Case0262,Dataset2---Internal Testing,0,0.01,0
+Case0263,Dataset2---Internal Testing,0,0.01,0
+Case0263,Dataset2---Internal Testing,0,0.01,0
+Case0264,Dataset2---Internal Testing,0,0.021629733,0
+Case0264,Dataset2---Internal Testing,0,0.01,0
+Case0265,Dataset2---Internal Testing,1,0.827100297,1
+Case0265,Dataset2---Internal Testing,1,0.732647335,1
+Case0265,Dataset2---Internal Testing,1,0.661950638,1
+Case0265,Dataset2---Internal Testing,1,0.632696281,1
+Case0266,Dataset2---Internal Testing,0,0.601077765,1
+Case0266,Dataset2---Internal Testing,0,0.06504232,0
+Case0267,Dataset2---Internal Testing,0,0.01,0
+Case0268,Dataset2---Internal Testing,0,0.01,0
+Case0268,Dataset2---Internal Testing,0,0.01,0
+Case0269,Dataset2---Internal Testing,0,0.097498954,0
+Case0270,Dataset2---Internal Testing,0,0.01,0
+Case0270,Dataset2---Internal Testing,0,0.01,0
+Case0271,Dataset2---Internal Testing,0,0.01,0
+Case0271,Dataset2---Internal Testing,0,0.01,0
+Case0272,Dataset2---Internal Testing,0,0.159674475,0
+Case0272,Dataset2---Internal Testing,0,0.140566161,0
+Case0273,Dataset2---Internal Testing,0,0.103509583,0
+Case0273,Dataset2---Internal Testing,0,0.01,0
+Case0274,Dataset2---Internal Testing,0,0.602495617,1
+Case0275,Dataset2---Internal Testing,0,0.057889143,0
+Case0275,Dataset2---Internal Testing,0,0.052679982,0
+Case0276,Dataset2---Internal Testing,0,0.073261855,0
+Case0277,Dataset2---Internal Testing,0,0.01,0
+Case0278,Dataset2---Internal Testing,0,0.158700489,0
+Case0278,Dataset2---Internal Testing,0,0.069097261,0
+Case0279,Dataset2---Internal Testing,0,0.092667513,0
+Case0279,Dataset2---Internal Testing,0,0.024805647,0
+Case0280,Dataset2---Internal Testing,0,0.063118559,0
+Case0280,Dataset2---Internal Testing,0,0.01,0
+Case0281,Dataset2---Internal Testing,0,0.660720491,1
+Case0281,Dataset2---Internal Testing,0,0.148405489,0
+Case0282,Dataset2---Internal Testing,0,0.083934432,0
+Case0282,Dataset2---Internal Testing,0,0.058863912,0
+Case0283,Dataset2---Internal Testing,0,0.67565353,1
+Case0283,Dataset2---Internal Testing,0,0.163788917,0
+Case0284,Dataset2---Internal Testing,0,0.591843949,1
+Case0284,Dataset2---Internal Testing,0,0.154965947,0
+Case0285,Dataset2---Internal Testing,0,0.01,0
+Case0286,Dataset2---Internal Testing,0,0.663280171,1
+Case0287,Dataset2---Internal Testing,0,0.054127387,0
+Case0287,Dataset2---Internal Testing,0,0.04933017,0
+Case0288,Dataset2---Internal Testing,0,0.035939495,0
+Case0289,Dataset2---Internal Testing,0,0.600635627,1
+Case0290,Dataset2---Internal Testing,0,0.065924763,0
+Case0290,Dataset2---Internal Testing,0,0.039460261,0
+Case0291,Dataset2---Internal Testing,0,0.592455737,1
+Case0292,Dataset2---Internal Testing,0,0.164552388,0
+Case0292,Dataset2---Internal Testing,0,0.010612865,0
+Case0293,Dataset2---Internal Testing,0,0.01,0
+Case0293,Dataset2---Internal Testing,0,0.01,0
+Case0294,Dataset2---Internal Testing,0,0.01,0
+Case0294,Dataset2---Internal Testing,0,0.01,0
+Case0295,Dataset2---Internal Testing,0,0.581938649,1
+Case0296,Dataset2---Internal Testing,0,0.01,0
+Case0296,Dataset2---Internal Testing,0,0.01,0
+Case0296,Dataset2---Internal Testing,0,0.01,0
+Case0296,Dataset2---Internal Testing,0,0.01,0
+Case0297,Dataset2---Internal Testing,0,0.111789556,0
+Case0298,Dataset2---Internal Testing,0,0.034836047,0
+Case0298,Dataset2---Internal Testing,0,0.01,0
+Case0298,Dataset2---Internal Testing,0,0.01,0
+Case0299,Dataset3---Multicenter,0,0.333975516,0
+Case0300,Dataset3---Multicenter,1,0.86161374,1
+Case0301,Dataset3---Multicenter,1,0.734304804,1
+Case0302,Dataset3---Multicenter,1,0.694021204,1
+Case0303,Dataset3---Multicenter,0,0.371871249,0
+Case0304,Dataset3---Multicenter,1,0.426903523,0
+Case0305,Dataset3---Multicenter,0,0.218862522,0
+Case0306,Dataset3---Multicenter,1,0.793854168,1
+Case0307,Dataset3---Multicenter,0,0.549007579,1
+Case0308,Dataset3---Multicenter,1,0.588648756,1
+Case0309,Dataset3---Multicenter,1,0.723136242,1
+Case0309,Dataset3---Multicenter,1,0.646603929,1
+Case0309,Dataset3---Multicenter,1,0.62481219,1
+Case0310,Dataset3---Multicenter,1,0.782429237,1
+Case0311,Dataset3---Multicenter,1,0.235449504,0
+Case0312,Dataset3---Multicenter,0,0.33560018,0
+Case0313,Dataset3---Multicenter,1,0.721093969,1
+Case0313,Dataset3---Multicenter,1,0.710783587,1
+Case0313,Dataset3---Multicenter,1,0.574270938,1
+Case0313,Dataset3---Multicenter,1,0.570460308,1
+Case0314,Dataset3---Multicenter,0,0.2091485,0
+Case0314,Dataset3---Multicenter,0,0.208529477,0
+Case0314,Dataset3---Multicenter,0,0.0001,0
+Case0315,Dataset3---Multicenter,1,0.255626538,0
+Case0316,Dataset3---Multicenter,0,0.664560178,1
+Case0316,Dataset3---Multicenter,0,0.24327604,0
+Case0316,Dataset3---Multicenter,0,0.230867573,0
+Case0316,Dataset3---Multicenter,0,0.15516622,0
+Case0317,Dataset3---Multicenter,0,0.331133214,0
+Case0317,Dataset3---Multicenter,0,0.254566443,0
+Case0317,Dataset3---Multicenter,0,0.240912921,0
+Case0317,Dataset3---Multicenter,0,0.051290323,0
+Case0318,Dataset3---Multicenter,1,0.9999,1
+Case0318,Dataset3---Multicenter,1,0.961355874,1
+Case0319,Dataset3---Multicenter,0,0.560912198,1
+Case0320,Dataset3---Multicenter,0,0.199301353,0
+Case0320,Dataset3---Multicenter,0,0.061307484,0
+Case0321,Dataset3---Multicenter,1,0.656095874,1
+Case0322,Dataset3---Multicenter,1,0.9999,1
+Case0322,Dataset3---Multicenter,1,0.514316487,1
+Case0323,Dataset3---Multicenter,0,0.01,0
+Case0324,Dataset3---Multicenter,0,0.01,0
+Case0325,Dataset3---Multicenter,0,0.01,0
+Case0326,Dataset3---Multicenter,0,0.01,0
+Case0327,Dataset3---Multicenter,0,0.01,0
+Case0328,Dataset3---Multicenter,0,0.01,0
+Case0329,Dataset3---Multicenter,0,0.01,0
+Case0330,Dataset3---Multicenter,0,0.01,0
+Case0331,Dataset3---Multicenter,0,0.01,0
+Case0332,Dataset3---Multicenter,0,0.01,0
+Case0333,Dataset3---Multicenter,0,0.01,0
+Case0334,Dataset3---Multicenter,0,0.01,0
+Case0335,Dataset3---Multicenter,0,0.01,0
+Case0336,Dataset3---Multicenter,0,0.01,0
+Case0336,Dataset3---Multicenter,0,0.01,0
+Case0337,Dataset3---Multicenter,0,0.01,0
+Case0338,Dataset3---Multicenter,0,0.01,0
+Case0339,Dataset3---Multicenter,0,0.01,0
+Case0340,Dataset3---Multicenter,0,0.01,0
+Case0341,Dataset3---Multicenter,0,0.01,0
+Case0342,Dataset3---Multicenter,0,0.01,0
+Case0343,Dataset3---Multicenter,0,0.01,0
+Case0344,Dataset3---Multicenter,0,0.01,0
+Case0345,Dataset3---Multicenter,0,0.01,0
+Case0346,Dataset3---Multicenter,0,0.01,0
+Case0347,Dataset3---Multicenter,0,0.01,0
+Case0348,Dataset3---Multicenter,0,0.01,0
+Case0349,Dataset3---Multicenter,0,0.01,0
+Case0350,Dataset3---Multicenter,0,0.01,0
+Case0351,Dataset3---Multicenter,0,0.01,0
+Case0352,Dataset3---Multicenter,0,0.01,0
+Case0353,Dataset3---Multicenter,0,0.01,0
+Case0354,Dataset3---Multicenter,0,0.01,0
+Case0355,Dataset3---Multicenter,0,0.01,0
+Case0356,Dataset3---Multicenter,0,0.01,0
+Case0357,Dataset3---Multicenter,0,0.01,0
+Case0358,Dataset3---Multicenter,0,0.01,0
+Case0359,Dataset3---Multicenter,0,0.01,0
+Case0360,Dataset3---Multicenter,0,0.01,0
+Case0361,Dataset3---Multicenter,0,0.01,0
+Case0362,Dataset3---Multicenter,0,0.01,0
+Case0363,Dataset3---Multicenter,0,0.01,0
+Case0364,Dataset3---Multicenter,0,0.01,0
+Case0365,Dataset3---Multicenter,0,0.01,0
+Case0366,Dataset3---Multicenter,0,0.01,0
+Case0367,Dataset3---Multicenter,0,0.01,0
+Case0368,Dataset3---Multicenter,0,0.01,0
+Case0369,Dataset3---Multicenter,0,0.01,0
+Case0370,Dataset3---Multicenter,0,0.01,0
+Case0371,Dataset3---Multicenter,0,0.01,0
+Case0372,Dataset3---Multicenter,0,0.01,0
+Case0373,Dataset3---Multicenter,0,0.01,0
+Case0374,Dataset3---Multicenter,0,0.01,0
+Case0375,Dataset3---Multicenter,0,0.01,0
+Case0376,Dataset3---Multicenter,0,0.01,0
+Case0377,Dataset3---Multicenter,0,0.01,0
+Case0378,Dataset3---Multicenter,0,0.01,0
+Case0379,Dataset3---Multicenter,0,0.01,0
+Case0380,Dataset3---Multicenter,0,0.01,0
+Case0381,Dataset3---Multicenter,0,0.01,0
+Case0382,Dataset3---Multicenter,0,0.01,0
+Case0383,Dataset3---Multicenter,0,0.01,0
+Case0384,Dataset3---Multicenter,0,0.01,0
+Case0385,Dataset3---Multicenter,0,0.01,0
+Case0386,Dataset3---Multicenter,0,0.01,0
+Case0387,Dataset3---Multicenter,0,0.01,0
+Case0388,Dataset3---Multicenter,0,0.01,0
+Case0389,Dataset3---Multicenter,0,0.01,0
+Case0390,Dataset3---Multicenter,0,0.01,0
+Case0391,Dataset3---Multicenter,0,0.01,0
+Case0392,Dataset3---Multicenter,1,0.72910279,1
+Case0393,Dataset3---Multicenter,1,0.297989556,0
+Case0394,Dataset3---Multicenter,1,0.553121206,1
+Case0395,Dataset3---Multicenter,1,0.738542324,1
+TCGA-2K-A9WE,Dataset4---TCGA cohort,0,0.01,0
+TCGA-2Z-A9J1,Dataset4---TCGA cohort,0,0.10646254,0
+TCGA-2Z-A9J2,Dataset4---TCGA cohort,0,0.028006111,0
+TCGA-2Z-A9J3,Dataset4---TCGA cohort,0,0.666621646,1
+TCGA-2Z-A9J5,Dataset4---TCGA cohort,0,0.01,0
+TCGA-2Z-A9J7,Dataset4---TCGA cohort,0,0.01,0
+TCGA-2Z-A9J8,Dataset4---TCGA cohort,0,0.044003217,0
+TCGA-2Z-A9J9,Dataset4---TCGA cohort,0,0.01,0
+TCGA-2Z-A9JD,Dataset4---TCGA cohort,0,0.140191429,0
+TCGA-2Z-A9JE,Dataset4---TCGA cohort,0,0.01,0
+TCGA-2Z-A9JG,Dataset4---TCGA cohort,0,0.01,0
+TCGA-2Z-A9JI,Dataset4---TCGA cohort,0,0.01,0
+TCGA-2Z-A9JJ,Dataset4---TCGA cohort,0,0.01,0
+TCGA-2Z-A9JK,Dataset4---TCGA cohort,0,0.650792055,1
+TCGA-2Z-A9JL,Dataset4---TCGA cohort,0,0.01,0
+TCGA-2Z-A9JM,Dataset4---TCGA cohort,0,0.029187924,0
+TCGA-2Z-A9JN,Dataset4---TCGA cohort,0,0.323692983,0
+TCGA-2Z-A9JO,Dataset4---TCGA cohort,0,0.033682095,0
+TCGA-2Z-A9JP,Dataset4---TCGA cohort,0,0.01,0
+TCGA-2Z-A9JQ,Dataset4---TCGA cohort,0,0.01,0
+TCGA-2Z-A9JR,Dataset4---TCGA cohort,0,0.01,0
+TCGA-2Z-A9JS,Dataset4---TCGA cohort,0,0.033032782,0
+TCGA-2Z-A9JT,Dataset4---TCGA cohort,0,0.01,0
+TCGA-4A-A93X,Dataset4---TCGA cohort,0,0.01,0
+TCGA-4A-A93X,Dataset4---TCGA cohort,0,0.01,0
+TCGA-4A-A93Y,Dataset4---TCGA cohort,0,0.026491506,0
+TCGA-5P-A9JU,Dataset4---TCGA cohort,0,0.01,0
+TCGA-5P-A9JW,Dataset4---TCGA cohort,0,0.01,0
+TCGA-5P-A9JY,Dataset4---TCGA cohort,0,0.043177403,0
+TCGA-5P-A9JZ,Dataset4---TCGA cohort,0,0.01,0
+TCGA-5P-A9K0,Dataset4---TCGA cohort,0,0.980908716,1
+TCGA-5P-A9K2,Dataset4---TCGA cohort,0,0.710286764,1
+TCGA-5P-A9K3,Dataset4---TCGA cohort,0,0.123250765,0
+TCGA-5P-A9K4,Dataset4---TCGA cohort,0,0.15212086,0
+TCGA-5P-A9K6,Dataset4---TCGA cohort,0,0.041452878,0
+TCGA-5P-A9K8,Dataset4---TCGA cohort,0,0.094649133,0
+TCGA-5P-A9K9,Dataset4---TCGA cohort,0,0.13432483,0
+TCGA-5P-A9KE,Dataset4---TCGA cohort,0,0.114949223,0
+TCGA-A4-7286,Dataset4---TCGA cohort,0,0.01,0
+TCGA-A4-7288,Dataset4---TCGA cohort,0,0.132714055,0
+TCGA-A4-7583,Dataset4---TCGA cohort,0,0.01,0
+TCGA-A4-7584,Dataset4---TCGA cohort,0,0.01,0
+TCGA-A4-7585,Dataset4---TCGA cohort,0,0.194241188,0
+TCGA-A4-7828,Dataset4---TCGA cohort,0,0.01,0
+TCGA-A4-8098,Dataset4---TCGA cohort,0,0.134146568,0
+TCGA-A4-8312,Dataset4---TCGA cohort,0,0.291002358,0
+TCGA-A4-8515,Dataset4---TCGA cohort,0,0.01,0
+TCGA-A4-8517,Dataset4---TCGA cohort,0,0.01,0
+TCGA-A4-8518,Dataset4---TCGA cohort,0,0.224423624,0
+TCGA-A4-8630,Dataset4---TCGA cohort,0,0.05604342,0
+TCGA-A4-A48D,Dataset4---TCGA cohort,0,0.266792122,0
+TCGA-A4-A57E,Dataset4---TCGA cohort,0,0.679238096,1
+TCGA-A4-A5Y0,Dataset4---TCGA cohort,0,0.027073177,0
+TCGA-A4-A5Y1,Dataset4---TCGA cohort,0,0.244851066,0
+TCGA-AL-3466,Dataset4---TCGA cohort,0,0.01,0
+TCGA-AL-3467,Dataset4---TCGA cohort,0,0.01,0
+TCGA-AL-3467,Dataset4---TCGA cohort,0,0.01,0
+TCGA-AL-3473,Dataset4---TCGA cohort,0,0.277654076,0
+TCGA-AL-3473,Dataset4---TCGA cohort,0,0.23669352,0
+TCGA-AL-7173,Dataset4---TCGA cohort,0,0.030246006,0
+TCGA-AL-A5DJ,Dataset4---TCGA cohort,0,0.01,0
+TCGA-AT-A5NU,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B1-7332,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B1-A47M,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B1-A47N,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B1-A47O,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B3-3925,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B3-3926,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B3-4103,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B3-4104,Dataset4---TCGA cohort,0,0.158022153,0
+TCGA-B3-A6W5,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B3-A6W5,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B9-4115,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B9-4116,Dataset4---TCGA cohort,0,0.064663948,0
+TCGA-B9-4117,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B9-5155,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B9-5156,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B9-7268,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B9-A44B,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B9-A5W7,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B9-A5W8,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B9-A5W9,Dataset4---TCGA cohort,0,0.01,0
+TCGA-B9-A8YH,Dataset4---TCGA cohort,0,0.067691616,0
+TCGA-B9-A8YI,Dataset4---TCGA cohort,0,0.136793004,0
+TCGA-BQ-5875,Dataset4---TCGA cohort,0,0.278852675,0
+TCGA-BQ-5876,Dataset4---TCGA cohort,0,0.0001,0
+TCGA-BQ-5877,Dataset4---TCGA cohort,0,0.01,0
+TCGA-BQ-5878,Dataset4---TCGA cohort,0,0.221540582,0
+TCGA-BQ-5879,Dataset4---TCGA cohort,1,0.850922751,1
+TCGA-BQ-5879,Dataset4---TCGA cohort,1,0.762973715,1
+TCGA-BQ-5879,Dataset4---TCGA cohort,1,0.625341262,1
+TCGA-BQ-5880,Dataset4---TCGA cohort,0,0.175317214,0
+TCGA-BQ-5881,Dataset4---TCGA cohort,0,0.095238325,0
+TCGA-BQ-5882,Dataset4---TCGA cohort,0,0.01,0
+TCGA-BQ-5883,Dataset4---TCGA cohort,0,0.750836908,1
+TCGA-BQ-5884,Dataset4---TCGA cohort,0,0.0001,0
+TCGA-BQ-5885,Dataset4---TCGA cohort,0,0.021650567,0
+TCGA-BQ-5886,Dataset4---TCGA cohort,0,0.01,0
+TCGA-BQ-5887,Dataset4---TCGA cohort,0,0.01,0
+TCGA-BQ-5888,Dataset4---TCGA cohort,0,0.01,0
+TCGA-BQ-5889,Dataset4---TCGA cohort,0,0.056818049,0
+TCGA-BQ-5890,Dataset4---TCGA cohort,0,0.230936156,0
+TCGA-BQ-5893,Dataset4---TCGA cohort,1,0.720586066,1
+TCGA-BQ-5893,Dataset4---TCGA cohort,1,0.70007716,1
+TCGA-BQ-5893,Dataset4---TCGA cohort,1,0.28984697,0
+TCGA-BQ-5894,Dataset4---TCGA cohort,1,0.9999,1
+TCGA-BQ-5894,Dataset4---TCGA cohort,1,0.950089906,1
+TCGA-BQ-5894,Dataset4---TCGA cohort,1,0.662549384,1
+TCGA-BQ-7044,Dataset4---TCGA cohort,0,0.01,0
+TCGA-BQ-7045,Dataset4---TCGA cohort,0,0.01,0
+TCGA-BQ-7046,Dataset4---TCGA cohort,0,0.01,0
+TCGA-BQ-7048,Dataset4---TCGA cohort,0,0.01,0
+TCGA-BQ-7049,Dataset4---TCGA cohort,0,0.01,0
+TCGA-BQ-7050,Dataset4---TCGA cohort,0,0.0001,0
+TCGA-BQ-7051,Dataset4---TCGA cohort,0,0.01,0
+TCGA-BQ-7053,Dataset4---TCGA cohort,0,0.01,0
+TCGA-BQ-7055,Dataset4---TCGA cohort,0,0.01,0
+TCGA-BQ-7056,Dataset4---TCGA cohort,0,0.01,0
+TCGA-BQ-7058,Dataset4---TCGA cohort,0,0.029481306,0
+TCGA-BQ-7059,Dataset4---TCGA cohort,0,0.01,0
+TCGA-BQ-7060,Dataset4---TCGA cohort,0,0.01,0
+TCGA-BQ-7061,Dataset4---TCGA cohort,0,0.013812931,0
+TCGA-BQ-7062,Dataset4---TCGA cohort,0,0.01,0
+TCGA-DW-5560,Dataset4---TCGA cohort,0,0.01,0
+TCGA-DW-5561,Dataset4---TCGA cohort,0,0.01,0
+TCGA-DW-7834,Dataset4---TCGA cohort,0,0.01,0
+TCGA-DW-7839,Dataset4---TCGA cohort,0,0.010949701,0
+TCGA-DW-7840,Dataset4---TCGA cohort,0,0.01,0
+TCGA-DW-7841,Dataset4---TCGA cohort,0,0.01,0
+TCGA-DW-7842,Dataset4---TCGA cohort,0,0.01,0
+TCGA-EV-5901,Dataset4---TCGA cohort,0,0.01,0
+TCGA-EV-5902,Dataset4---TCGA cohort,0,0.01,0
+TCGA-EV-5903,Dataset4---TCGA cohort,0,0.01,0
+TCGA-F9-A4JJ,Dataset4---TCGA cohort,1,0.672631629,1
+TCGA-F9-A4JJ,Dataset4---TCGA cohort,1,0.619473338,1
+TCGA-F9-A7Q0,Dataset4---TCGA cohort,0,0.01,0
+TCGA-F9-A7VF,Dataset4---TCGA cohort,0,0.116011988,0
+TCGA-F9-A97G,Dataset4---TCGA cohort,0,0.088327836,0
+TCGA-G7-6789,Dataset4---TCGA cohort,0,0.01,0
+TCGA-G7-6790,Dataset4---TCGA cohort,0,0.01,0
+TCGA-G7-6792,Dataset4---TCGA cohort,0,0.01,0
+TCGA-G7-6796,Dataset4---TCGA cohort,0,0.01,0
+TCGA-G7-6797,Dataset4---TCGA cohort,0,0.01,0
+TCGA-G7-7501,Dataset4---TCGA cohort,0,0.271516179,0
+TCGA-G7-7502,Dataset4---TCGA cohort,0,0.01,0
+TCGA-G7-A4TM,Dataset4---TCGA cohort,0,0.01,0
+TCGA-G7-A8LC,Dataset4---TCGA cohort,0,0.01,0
+TCGA-G7-A8LD,Dataset4---TCGA cohort,0,0.107509514,0
+TCGA-GL-7966,Dataset4---TCGA cohort,1,0.637978699,1
+TCGA-GL-7966,Dataset4---TCGA cohort,1,0.539182728,1
+TCGA-GL-7966,Dataset4---TCGA cohort,1,0.22503396,0
+TCGA-GL-A59R,Dataset4---TCGA cohort,0,0.06295112,0
+TCGA-GL-A59T,Dataset4---TCGA cohort,0,0.01,0
+TCGA-GL-A9DC,Dataset4---TCGA cohort,0,0.01,0
+TCGA-GL-A9DD,Dataset4---TCGA cohort,0,0.01,0
+TCGA-GL-A9DE,Dataset4---TCGA cohort,0,0.144486543,0
+TCGA-HE-7128,Dataset4---TCGA cohort,0,0.336096404,0
+TCGA-HE-7129,Dataset4---TCGA cohort,0,0.0001,0
+TCGA-HE-7130,Dataset4---TCGA cohort,0,0.01,0
+TCGA-IA-A40U,Dataset4---TCGA cohort,0,0.01,0
+TCGA-IA-A40X,Dataset4---TCGA cohort,0,0.01,0
+TCGA-IA-A40Y,Dataset4---TCGA cohort,0,0.01,0
+TCGA-IA-A83V,Dataset4---TCGA cohort,0,0.0001,0
+TCGA-IZ-8195,Dataset4---TCGA cohort,0,0.01,0
+TCGA-IZ-8196,Dataset4---TCGA cohort,0,0.01,0
+TCGA-IZ-A6M8,Dataset4---TCGA cohort,0,0.01,0
+TCGA-IZ-A6M9,Dataset4---TCGA cohort,0,0.01,0
+TCGA-J7-6720,Dataset4---TCGA cohort,0,0.01,0
+TCGA-J7-8537,Dataset4---TCGA cohort,0,0.01,0
+TCGA-J7-8537,Dataset4---TCGA cohort,0,0.01,0
+TCGA-J7-8537,Dataset4---TCGA cohort,0,0.01,0
+TCGA-J7-A8I2,Dataset4---TCGA cohort,0,0.01,0
+TCGA-KV-A6GD,Dataset4---TCGA cohort,0,0.065868043,0
+TCGA-KV-A6GD,Dataset4---TCGA cohort,0,0.058808741,0
+TCGA-KV-A6GD,Dataset4---TCGA cohort,0,0.036519622,0
+TCGA-KV-A6GD,Dataset4---TCGA cohort,0,0.027267994,0
+TCGA-KV-A6GD,Dataset4---TCGA cohort,0,0.014652731,0
+TCGA-KV-A6GD,Dataset4---TCGA cohort,0,0.01,0
+TCGA-KV-A6GD,Dataset4---TCGA cohort,0,0.01,0
+TCGA-KV-A6GE,Dataset4---TCGA cohort,0,0.07754823,0
+TCGA-KV-A6GE,Dataset4---TCGA cohort,0,0.01,0
+TCGA-KV-A6GE,Dataset4---TCGA cohort,0,0.01,0
+TCGA-KV-A6GE,Dataset4---TCGA cohort,0,0.01,0
+TCGA-KV-A6GE,Dataset4---TCGA cohort,0,0.01,0
+TCGA-KV-A6GE,Dataset4---TCGA cohort,0,0.01,0
+TCGA-KV-A6GE,Dataset4---TCGA cohort,0,0.01,0
+TCGA-KV-A74V,Dataset4---TCGA cohort,0,0.01,0
+TCGA-MH-A55W,Dataset4---TCGA cohort,0,0.01,0
+TCGA-MH-A55Z,Dataset4---TCGA cohort,0,0.01,0
+TCGA-MH-A560,Dataset4---TCGA cohort,0,0.01,0
+TCGA-MH-A560,Dataset4---TCGA cohort,0,0.01,0
+TCGA-MH-A561,Dataset4---TCGA cohort,0,0.01,0
+TCGA-MH-A562,Dataset4---TCGA cohort,0,0.01,0
+TCGA-MH-A854,Dataset4---TCGA cohort,0,0.01,0
+TCGA-MH-A855,Dataset4---TCGA cohort,0,0.01,0
+TCGA-MH-A856,Dataset4---TCGA cohort,0,0.01,0
+TCGA-MH-A857,Dataset4---TCGA cohort,0,0.01,0
+TCGA-O9-A75Z,Dataset4---TCGA cohort,0,0.01,0
+TCGA-P4-A5E6,Dataset4---TCGA cohort,0,0.158966607,0
+TCGA-P4-A5E7,Dataset4---TCGA cohort,0,0.197224423,0
+TCGA-P4-A5ED,Dataset4---TCGA cohort,0,0.01,0
+TCGA-P4-AAVM,Dataset4---TCGA cohort,0,0.022910193,0
+TCGA-PJ-A5Z8,Dataset4---TCGA cohort,0,0.01,0
+TCGA-PJ-A5Z9,Dataset4---TCGA cohort,0,0.01,0
+TCGA-PJ-A8JU,Dataset4---TCGA cohort,0,0.01,0
+TCGA-Q2-A5QZ,Dataset4---TCGA cohort,0,0.059043768,0
+TCGA-SX-A71R,Dataset4---TCGA cohort,0,0.01,0
+TCGA-SX-A71S,Dataset4---TCGA cohort,0,0.01,0
+TCGA-SX-A71U,Dataset4---TCGA cohort,0,0.01,0
+TCGA-SX-A71V,Dataset4---TCGA cohort,0,0.01,0
+TCGA-SX-A71W,Dataset4---TCGA cohort,0,0.01,0
+TCGA-SX-A7SL,Dataset4---TCGA cohort,0,0.01,0
+TCGA-SX-A7SM,Dataset4---TCGA cohort,0,0.01,0
+TCGA-SX-A7SN,Dataset4---TCGA cohort,0,0.01,0
+TCGA-SX-A7SO,Dataset4---TCGA cohort,0,0.01,0
+TCGA-SX-A7SP,Dataset4---TCGA cohort,0,0.01,0
+TCGA-SX-A7SQ,Dataset4---TCGA cohort,0,0.01,0
+TCGA-SX-A7SR,Dataset4---TCGA cohort,0,0.01,0
+TCGA-UZ-A9PJ,Dataset4---TCGA cohort,0,0.01,0
+TCGA-UZ-A9PK,Dataset4---TCGA cohort,0,0.01,0
+TCGA-UZ-A9PM,Dataset4---TCGA cohort,0,0.01,0
+TCGA-UZ-A9PN,Dataset4---TCGA cohort,0,0.01,0
+TCGA-UZ-A9PO,Dataset4---TCGA cohort,0,0.077243567,0
+TCGA-UZ-A9PP,Dataset4---TCGA cohort,0,0.01,0
+TCGA-UZ-A9PR,Dataset4---TCGA cohort,0,0.01,0
+TCGA-UZ-A9PS,Dataset4---TCGA cohort,0,0.01,0
+TCGA-UZ-A9PU,Dataset4---TCGA cohort,0,0.01,0
+TCGA-UZ-A9PV,Dataset4---TCGA cohort,0,0.01,0
+TCGA-UZ-A9PX,Dataset4---TCGA cohort,0,0.01,0
+TCGA-UZ-A9PZ,Dataset4---TCGA cohort,0,0.01,0
+TCGA-UZ-A9Q0,Dataset4---TCGA cohort,0,0.01,0
+TCGA-UZ-A9Q1,Dataset4---TCGA cohort,0,0.01,0
+TCGA-V9-A7HT,Dataset4---TCGA cohort,0,0.01,0
+TCGA-WN-A9G9,Dataset4---TCGA cohort,0,0.01,0
+TCGA-WN-AB4C,Dataset4---TCGA cohort,0,0.01,0
+TCGA-Y8-A894,Dataset4---TCGA cohort,0,0.01,0
+TCGA-Y8-A895,Dataset4---TCGA cohort,0,0.01,0
+TCGA-Y8-A896,Dataset4---TCGA cohort,0,0.01,0
+TCGA-Y8-A897,Dataset4---TCGA cohort,0,0.01,0
+TCGA-Y8-A898,Dataset4---TCGA cohort,0,0.100121916,0
+TCGA-Y8-A8RY,Dataset4---TCGA cohort,0,0.01,0
+TCGA-Y8-A8RZ,Dataset4---TCGA cohort,0,0.122996686,0
+TCGA-Y8-A8S0,Dataset4---TCGA cohort,0,0.01,0
+TCGA-Y8-A8S1,Dataset4---TCGA cohort,0,0.01,0
