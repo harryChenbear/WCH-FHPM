@@ -52,7 +52,6 @@ The three steps above describe the basic process for using the website’s AI mo
 2. Although the prediction model shows high accuracy in our previous testing, the results should only be used as a reference and should not be considered as the evidence of the final diagnosis. The standard diagnosis of FH-dRCC should rely on the gold standard.
 3. Despite extensive testing, the platform may still have areas needing improvement or maintenance. If any issues arise, please contact the team leader via email at WCH_FHPM@163.com for feedback.
 
+![Online platform](Fig.png)
 
-![Online web platform](<Fig.png>)
-
-![WCH-FHPM User Manual](image.png)
+![Online platform](image.png)
