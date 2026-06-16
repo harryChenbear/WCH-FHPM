@@ -1,0 +1,7 @@
+torch
+torchvision
+timm
+openslide-python
+pandas
+numpy
+Pillow

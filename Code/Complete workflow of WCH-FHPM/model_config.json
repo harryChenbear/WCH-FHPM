@@ -1,0 +1,28 @@
+{
+  "project": "Complete workflow of WCH-FHPM",
+  "workflow": [
+    "background removal by tissue filtering",
+    "tumor-associated patch detection using tumor detector",
+    "FH prediction using FH predictor",
+    "slide-level aggregation by mean FH probability over tumor-associated patches",
+    "patch-level FH probability heatmap generation"
+  ],
+  "models": {
+    "tumor_detector": "models/WCH_TumorDetector_ViTBase512.pth",
+    "fh_predictor": "models/WCH_FHPM_ViTBase512.pth"
+  },
+  "default_parameters": {
+    "tile_size": 512,
+    "step_size": 512,
+    "min_tissue_fraction": 0.2,
+    "tumor_threshold": 0.2,
+    "fh_cutoff": 0.5,
+    "slide_level_aggregation": "mean FH probability over tumor-associated patches"
+  },
+  "output_files": {
+    "all_slide_results.csv": "summary of slide-level prediction results",
+    "patch_predictions.csv": "patch-level tissue/tumor/FH probabilities",
+    "FH_probability_heatmap.png": "patch-level FH prediction heatmap"
+  },
+  "intended_use": "research_use_only"
+}

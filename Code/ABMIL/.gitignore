@@ -1,0 +1,33 @@
+__pycache__/
+*.pyc
+*.log
+logs/
+results/
+runs/
+wandb/
+.ipynb_checkpoints/
+
+# Raw whole-slide images should not be uploaded.
+*.svs
+*.SVS
+*.ndpi
+*.NDPI
+*.tif
+*.TIF
+*.tiff
+*.TIFF
+*.kfb
+*.KFB
+
+# Intermediate files should not be uploaded.
+*.h5
+
+# Patch-level feature files are usually large and should not be uploaded.
+*.pt
+
+# Keep the final ABMIL checkpoint.
+!models/*.pt
+
+.DS_Store
+.vscode/
+.idea/

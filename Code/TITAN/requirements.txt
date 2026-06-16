@@ -1,0 +1,9 @@
+numpy
+pandas
+scikit-learn
+joblib
+h5py
+torch
+torchvision
+openslide-python
+tqdm
