@@ -1,1393 +1,616 @@
-<<<<<<< HEAD
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Complete inference workflow for WCH-FHPM.
+
+This script processes H&E-stained whole-slide images (WSIs) and produces:
+1. tissue-filtered patch coordinates,
+2. tumor-associated patch detection using WCH_TumorDetector_ViTBase512.pth,
+3. FH-dRCC patch-level probabilities using WCH_FHPM_ViTBase512.pth,
+4. slide-level FH-dRCC probability by averaging tumor-associated patch probabilities,
+5. patch-level CSV outputs and a heatmap PNG.
+
+The default tumor-associated threshold is 0.20, which is equivalent to excluding
+patches with predicted normal-tissue probability > 0.80 in a two-class softmax
+model. This matches the manuscript description: highly normal patches are
+removed, while ambiguous, mixed, stromal, and tumor-adjacent patches are retained.
+"""
+
+from __future__ import annotations
 
 import argparse
-import hashlib
 import json
+import math
 import os
-import re
 import time
 from pathlib import Path
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 import numpy as np
-import openslide
 import pandas as pd
-import timm
+from PIL import Image, ImageDraw
+
 import torch
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+import torch.nn.functional as F
 from torchvision import transforms
 
-
-SLIDE_EXTS = {".svs", ".ndpi", ".tif", ".tiff", ".mrxs", ".scn"}
+try:
+    import openslide
+except ImportError as exc:  # pragma: no cover
+    raise ImportError(
+        "openslide-python is required. Install it with `pip install openslide-python` "
+        "and install the OpenSlide system library, e.g. `apt-get install -y openslide-tools libopenslide0`."
+    ) from exc
 
 try:
-    RESAMPLING_NEAREST = Image.Resampling.NEAREST
-except AttributeError:
-    RESAMPLING_NEAREST = Image.NEAREST
+    import timm
+except ImportError as exc:  # pragma: no cover
+    raise ImportError("timm is required. Install it with `pip install timm`.") from exc
 
 
-def safe_name(s, max_len=120):
-    s = str(s)
-    b = re.sub(r"[^A-Za-z0-9\u4e00-\u9fff._-]+", "_", s).strip("._-")
-    h = hashlib.md5(s.encode("utf-8", errors="ignore")).hexdigest()[:8]
-    return f"{b[:max_len]}__{h}"
+SUPPORTED_EXTENSIONS = {
+    ".svs",
+    ".ndpi",
+    ".tif",
+    ".tiff",
+    ".mrxs",
+    ".scn",
+    ".kfb",
+}
+
+IMAGENET_MEAN = (0.485, 0.456, 0.406)
+IMAGENET_STD = (0.229, 0.224, 0.225)
 
 
-def find_slides(root):
-    return sorted(
-        str(p)
-        for p in Path(root).rglob("*")
-        if p.is_file() and p.suffix.lower() in SLIDE_EXTS
+# -----------------------------------------------------------------------------
+# Utility functions
+# -----------------------------------------------------------------------------
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Run the complete WCH-FHPM inference workflow on one WSI or a folder of WSIs."
     )
+    input_group = parser.add_mutually_exclusive_group(required=True)
+    input_group.add_argument("--slide", type=str, help="Path to one whole-slide image.")
+    input_group.add_argument("--slide_dir", type=str, help="Path to a folder containing whole-slide images.")
 
+    parser.add_argument("--out_dir", type=str, required=True, help="Output directory.")
+    parser.add_argument("--device", type=str, default="cuda", help="Inference device: cuda or cpu. Default: cuda.")
 
-def positive_index(label_mapping, task):
-    if not isinstance(label_mapping, dict) or not label_mapping:
-        return 1
+    parser.add_argument("--tumor_model", type=str, default="models/WCH_TumorDetector_ViTBase512.pth")
+    parser.add_argument("--fh_model", type=str, default="models/WCH_FHPM_ViTBase512.pth")
 
-    def norm(x):
-        return str(x).lower().replace("_", "").replace("-", "").replace(" ", "")
-
-    lm = {norm(k): int(v) for k, v in label_mapping.items()}
-
-    if task == "fh":
-        if "fh" in lm:
-            return lm["fh"]  # exact match; avoids matching nonFH
-
-        for k, v in lm.items():
-            if not k.startswith("non") and k in {
-                "fhrcc",
-                "fhdrcc",
-                "fhdrrcc",
-                "fhdrc",
-            }:
-                return v
-
-        return 1
-
-    if task == "tumor":
-        for k in ["tumor", "tumour", "cancer", "neoplastic"]:
-            if k in lm:
-                return lm[k]
-
-        for k, v in lm.items():
-            if (
-                "normal" not in k
-                and not k.startswith("non")
-                and "negative" not in k
-                and ("tumor" in k or "tumour" in k)
-            ):
-                return v
-
-        return 1
-
-    return 1
-
-
-def load_model(path, device):
-    ckpt = torch.load(path, map_location="cpu", weights_only=False)
-
-    model_name = ckpt.get("model_name", "vit_base_patch16_224")
-    img_size = int(ckpt.get("img_size", 512))
-    num_classes = int(ckpt.get("num_classes", 2))
-
-    state = (
-        ckpt.get("state_dict")
-        or ckpt.get("model_state_dict")
-        or ckpt.get("model")
-        or ckpt
+    parser.add_argument("--tile_size", type=int, default=512, help="Patch size in pixels. Default: 512.")
+    parser.add_argument("--step_size", type=int, default=512, help="Step size in pixels. Default: 512.")
+    parser.add_argument(
+        "--min_tissue_fraction",
+        type=float,
+        default=0.20,
+        help="Minimum tissue fraction for retaining a patch. Default: 0.20.",
     )
-
-    state = {
-        k.replace("module.", "", 1) if k.startswith("module.") else k: v
-        for k, v in state.items()
-    }
-
-    model = timm.create_model(
-        model_name,
-        pretrained=False,
-        num_classes=num_classes,
-        img_size=img_size,
+    parser.add_argument(
+        "--tumor_threshold",
+        type=float,
+        default=0.20,
+        help=(
+            "Threshold for tumor-associated patch selection. Default: 0.20. "
+            "For the two-class tumor detector, this corresponds to excluding patches "
+            "with predicted normal-tissue probability > 0.80."
+        ),
     )
-    model.load_state_dict(state, strict=True)
-    model.to(device)
-    model.eval()
+    parser.add_argument(
+        "--fh_cutoff",
+        type=float,
+        default=0.50,
+        help="Cutoff for slide-level FH-dRCC classification. Default: 0.50.",
+    )
+    parser.add_argument("--read_batch_size", type=int, default=128)
+    parser.add_argument("--batch_size", type=int, default=128)
+    parser.add_argument("--num_workers", type=int, default=0, help="Reserved for compatibility. Default: 0.")
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="model_config.json",
+        help="Optional JSON configuration file to copy into the output folder. Default: model_config.json.",
+    )
+    parser.add_argument(
+        "--save_heatmap",
+        action="store_true",
+        default=True,
+        help="Save a patch-level FH probability heatmap. Default: True.",
+    )
+    parser.add_argument(
+        "--no_heatmap",
+        action="store_false",
+        dest="save_heatmap",
+        help="Disable heatmap generation.",
+    )
+    return parser.parse_args()
 
-    prep = ckpt.get("preprocess", {})
-    mean = prep.get("mean", prep.get("normalize_mean", [0.485, 0.456, 0.406]))
-    std = prep.get("std", prep.get("normalize_std", [0.229, 0.224, 0.225]))
 
-    info = {
-        "img_size": img_size,
-        "mean": mean,
-        "std": std,
-        "label_mapping": ckpt.get("label_mapping", {}),
-        "model_path": str(path),
-    }
-
-    return model, info
+def resolve_path(path_str: str, base_dir: Optional[Path] = None) -> Path:
+    path = Path(path_str)
+    if path.is_absolute():
+        return path
+    if base_dir is None:
+        base_dir = Path.cwd()
+    return (base_dir / path).resolve()
 
 
-def build_tf(info):
+def find_slides(slide_dir: Path) -> List[Path]:
+    slides: List[Path] = []
+    for root, _, files in os.walk(slide_dir):
+        for filename in files:
+            path = Path(root) / filename
+            if path.suffix.lower() in SUPPORTED_EXTENSIONS:
+                slides.append(path)
+    return sorted(slides)
+
+
+def safe_slide_name(slide_path: Path) -> str:
+    name = slide_path.stem
+    safe = "".join(c if c.isalnum() or c in "._-" else "_" for c in name)
+    return safe or "slide"
+
+
+def get_tissue_fraction(tile: Image.Image) -> float:
+    """Estimate tissue fraction using a conservative RGB/HSV-based background filter."""
+    arr = np.asarray(tile.convert("RGB"), dtype=np.uint8)
+    if arr.size == 0:
+        return 0.0
+
+    # Convert to HSV using PIL to avoid adding extra dependencies.
+    hsv = np.asarray(tile.convert("HSV"), dtype=np.uint8)
+    saturation = hsv[:, :, 1]
+    value = hsv[:, :, 2]
+
+    # White background usually has high value and low saturation.
+    # This rule retains colored tissue and excludes bright white background.
+    tissue_mask = (saturation > 20) & (value < 245)
+
+    # Very dark regions may correspond to pen marks or scanning artifacts; keep them
+    # only if they also have some saturation.
+    tissue_fraction = float(tissue_mask.mean())
+    return tissue_fraction
+
+
+def read_tile(slide: "openslide.OpenSlide", x: int, y: int, tile_size: int) -> Image.Image:
+    """Read a level-0 tile and return an RGB image."""
+    tile = slide.read_region((int(x), int(y)), 0, (tile_size, tile_size)).convert("RGB")
+    return tile
+
+
+def build_transform(tile_size: int) -> transforms.Compose:
     return transforms.Compose(
         [
-            transforms.Resize((info["img_size"], info["img_size"])),
+            transforms.Resize((tile_size, tile_size)),
             transforms.ToTensor(),
-            transforms.Normalize(info["mean"], info["std"]),
+            transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
         ]
     )
 
 
-def tissue_fraction(img, sat_thr=20, gray_high=245, gray_low=10):
-    a = np.asarray(img.convert("RGB"))
-
-    mx = a.max(2).astype(np.int16)
-    mn = a.min(2).astype(np.int16)
-    sat = mx - mn
-    gray = a.mean(2)
-
-    return float(((sat > sat_thr) & (gray < gray_high) & (gray > gray_low)).mean())
-
-
-def batch_predict(model, imgs, tf, device, pos, batch_size):
-    out = []
-
-    if not imgs:
-        return out
-
-    with torch.no_grad():
-        for i in range(0, len(imgs), batch_size):
-            x = torch.stack([tf(im) for im in imgs[i : i + batch_size]], 0).to(
-                device,
-                non_blocking=True,
-            )
-
-            with torch.cuda.amp.autocast(enabled=(device.type == "cuda")):
-                p = torch.softmax(model(x), 1)[:, pos].detach().cpu().numpy()
-
-            out += [float(v) for v in p]
-
-    return out
+def strip_state_dict_prefix(state_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    """Remove common wrappers such as DataParallel's 'module.' prefix."""
+    cleaned = {}
+    for key, value in state_dict.items():
+        new_key = key
+        for prefix in ("module.", "model.", "net."):
+            if new_key.startswith(prefix):
+                new_key = new_key[len(prefix) :]
+        cleaned[new_key] = value
+    return cleaned
 
 
-def get_font(size, bold=False):
-    font_paths = [
-        (
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-            if bold
-            else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-        ),
-        (
-            "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf"
-            if bold
-            else "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf"
-        ),
-    ]
-
-    for p in font_paths:
-        if os.path.exists(p):
-            return ImageFont.truetype(p, size)
-
-    return ImageFont.load_default()
-
-
-def interp(c1, c2, t):
-    return tuple(
-        np.clip(np.array(c1) * (1 - t) + np.array(c2) * t, 0, 255)
-        .astype(np.uint8)
-        .tolist()
+def extract_state_dict(checkpoint: object) -> Dict[str, torch.Tensor]:
+    """Extract a PyTorch state_dict from common checkpoint formats."""
+    if isinstance(checkpoint, dict):
+        for key in ("model_state_dict", "state_dict", "model", "net"):
+            value = checkpoint.get(key)
+            if isinstance(value, dict):
+                return strip_state_dict_prefix(value)
+        if all(isinstance(k, str) for k in checkpoint.keys()):
+            # The checkpoint itself may already be a state_dict.
+            if any(isinstance(v, torch.Tensor) for v in checkpoint.values()):
+                return strip_state_dict_prefix(checkpoint)  # type: ignore[arg-type]
+    raise ValueError(
+        "Could not find a model state_dict in the checkpoint. Expected one of: "
+        "model_state_dict, state_dict, model, net, or a raw state_dict."
     )
 
 
-def color_prob(p):
-    p = float(np.clip(0.5 + 1.18 * (float(np.clip(p, 0, 1)) - 0.5), 0, 1))
-
-    anchors = [
-        (0, (32, 72, 192)),
-        (0.25, (92, 140, 230)),
-        (0.5, (247, 245, 242)),
-        (0.75, (239, 126, 92)),
-        (1, (197, 26, 44)),
-    ]
-
-    for (p1, c1), (p2, c2) in zip(anchors[:-1], anchors[1:]):
-        if p1 <= p <= p2:
-            return interp(c1, c2, (p - p1) / (p2 - p1))
-
-    return anchors[-1][1]
-
-
-def rr_mask(size, r):
-    m = Image.new("L", size, 0)
-    d = ImageDraw.Draw(m)
-    d.rounded_rectangle((0, 0, size[0] - 1, size[1] - 1), radius=r, fill=255)
-    return m
-
-
-def center_text(draw, xy, text, font, fill):
-    b = draw.textbbox((0, 0), text, font=font)
-    draw.text(
-        (xy[0] - (b[2] - b[0]) / 2, xy[1] - (b[3] - b[1]) / 2),
-        text,
-        font=font,
-        fill=fill,
-    )
-
-
-def make_heatmap(
-    patch_df,
-    final_prob,
-    slide_name,
-    out_png,
-    canvas_w=1600,
-    canvas_h=1400,
-):
-    df = patch_df[(patch_df["is_tumor_associated"] == 1)].copy()
-    df["FH_probability"] = pd.to_numeric(df["FH_probability"], errors="coerce")
-    df = df.dropna(subset=["FH_probability"])
-
-    if len(df) == 0:
-        return None
-
-    xs = np.sort(df.x.unique())
-    ys = np.sort(df.y.unique())
-    xi = {x: i for i, x in enumerate(xs)}
-    yi = {y: i for i, y in enumerate(ys)}
-
-    grid = np.full((len(ys), len(xs), 3), 255, dtype=np.uint8)
-
-    for _, r in df.iterrows():
-        grid[yi[r.y], xi[r.x]] = color_prob(r.FH_probability)
-
-    raw = Image.fromarray(grid, "RGB")
-    bg = Image.new("RGBA", (canvas_w, canvas_h), (248, 248, 250, 255))
-
-    # Card shadow
-    shadow = Image.new("RGBA", bg.size, (0, 0, 0, 0))
-    sd = ImageDraw.Draw(shadow)
-    sd.rounded_rectangle(
-        (36, 46, canvas_w - 36, canvas_h - 26),
-        radius=34,
-        fill=(0, 0, 0, 42),
-    )
-    shadow = shadow.filter(ImageFilter.GaussianBlur(16))
-    bg.alpha_composite(shadow)
-
-    # Card
-    card = Image.new("RGBA", (canvas_w - 72, canvas_h - 72), (255, 255, 255, 255))
-    bg.paste(card, (36, 36), rr_mask(card.size, 34))
-
-    draw = ImageDraw.Draw(bg)
-    title = get_font(34, True)
-    probfont = get_font(30, True)
-    tickfont = get_font(20, False)
-
-    center_text(
-        draw,
-        (canvas_w // 2, 92),
-        "Heatmap of the Prediction",
-        title,
-        (25, 30, 40),
-    )
-
-    hx, hy, hw, hh = 105, 165, 1130, 980
-
-    panel = Image.new("RGBA", (hw, hh), (252, 252, 253, 255))
-    bg.paste(panel, (hx, hy), rr_mask((hw, hh), 22))
-
-    draw.rounded_rectangle(
-        (hx, hy, hx + hw, hy + hh),
-        radius=22,
-        outline=(232, 234, 238),
-        width=2,
-    )
-
-    aw, ah = hw - 40, hh - 40
-    rw, rh = raw.size
-    sc = min(aw / rw, ah / rh)
-
-    nw = max(1, int(rw * sc))
-    nh = max(1, int(rh * sc))
-
-    fit = raw.resize((nw, nh), RESAMPLING_NEAREST)
-
-    mx = hx + 20 + (aw - nw) // 2
-    my = hy + 20 + (ah - nh) // 2
-
-    bg.paste(fit, (mx, my))
-
-    # Colorbar
-    cbx, cby, cbw, cbh = 1290, 240, 62, 740
-
-    cb = Image.new("RGB", (cbw, cbh), "white")
-    cd = ImageDraw.Draw(cb)
-
-    for j in range(cbh):
-        cd.line((0, j, cbw, j), fill=color_prob(1 - j / max(cbh - 1, 1)))
-
-    bg.paste(cb, (cbx, cby), rr_mask((cbw, cbh), 12))
-    draw = ImageDraw.Draw(bg)
-
-    for t in [0.2, 0.4, 0.6, 0.8]:
-        ty = cby + int((1 - t) * cbh)
-        draw.line(
-            (cbx + cbw + 8, ty, cbx + cbw + 20, ty),
-            fill=(90, 94, 102),
-            width=2,
-        )
-        draw.text(
-            (cbx + cbw + 28, ty - 11),
-            f"{t:.1f}",
-            font=tickfont,
-            fill=(88, 92, 98),
-        )
-
-    prefix = "Predicted probability of FHdRCC: "
-    risk = "high risk" if final_prob >= 0.5 else "low risk"
-    val = f"{final_prob:.3f} ({risk})"
-
-    bw = draw.textbbox((0, 0), prefix, font=probfont)[2]
-    vw = draw.textbbox((0, 0), val, font=probfont)[2]
-
-    x = (canvas_w - bw - vw) // 2
-    y = 1248
-
-    draw.text((x, y), prefix, font=probfont, fill=(18, 28, 44))
-    draw.text(
-        (x + bw, y),
-        val,
-        font=probfont,
-        fill=(153, 0, 52) if final_prob >= 0.5 else (22, 84, 153),
-    )
-
-    os.makedirs(os.path.dirname(out_png), exist_ok=True)
-    bg.convert("RGB").save(out_png, quality=95)
-
-    return out_png
-
-
-def process_slide(
-    slide_path,
-    args,
-    tumor_model,
-    tumor_info,
-    fh_model,
-    fh_info,
-    device,
-):
-    name = os.path.basename(slide_path)
-    uid = safe_name(Path(name).stem)
-    outdir = os.path.join(args.out_dir, uid)
-    os.makedirs(outdir, exist_ok=True)
-
-    patch_csv = os.path.join(outdir, "patch_predictions.csv")
-    result_csv = os.path.join(outdir, "slide_result.csv")
-    heatmap = os.path.join(outdir, "FH_probability_heatmap.png")
-
-    t0 = time.time()
-
-    slide = openslide.OpenSlide(slide_path)
-    W, H = slide.dimensions
-
-    tumor_tf = build_tf(tumor_info)
-    fh_tf = build_tf(fh_info)
-
-    tumor_pos = positive_index(tumor_info.get("label_mapping", {}), "tumor")
-    fh_pos = positive_index(fh_info.get("label_mapping", {}), "fh")
-
-    print(
-        f"\n===== Slide: {name} =====\n"
-        f"Size: {W} x {H}\n"
-        f"tumor_pos_index={tumor_pos}; fh_pos_index={fh_pos}",
-        flush=True,
-    )
-
-    rows = []
-    imgs = []
-    metas = []
-
-    n_grid = 0
-    n_tissue = 0
-    n_failed = 0
-    n_tumor = 0
-
-    last = time.time()
-
-    def flush():
-        nonlocal imgs, metas, rows, n_tumor
-
-        if not imgs:
-            return
-
-        tps = batch_predict(
-            tumor_model,
-            imgs,
-            tumor_tf,
-            device,
-            tumor_pos,
-            args.batch_size,
-        )
-
-        tims = []
-        trows = []
-
-        for im, meta, tp in zip(imgs, metas, tps):
-            is_t = int(tp >= args.tumor_threshold)
-
-            row = dict(meta)
-            row.update(
-                {
-                    "tumor_probability": float(tp),
-                    "is_tumor_associated": is_t,
-                    "FH_probability": np.nan,
-                }
-            )
-
-            if is_t:
-                tims.append(im)
-                trows.append(row)
-            else:
-                rows.append(row)
-
-        if tims:
-            fps = batch_predict(
-                fh_model,
-                tims,
-                fh_tf,
-                device,
-                fh_pos,
-                args.batch_size,
-            )
-
-            for row, fp in zip(trows, fps):
-                row["FH_probability"] = float(fp)
-                rows.append(row)
-                n_tumor += 1
-
-        imgs = []
-        metas = []
-
-    for y in range(0, max(1, H - args.tile_size + 1), args.step_size):
-        for x in range(0, max(1, W - args.tile_size + 1), args.step_size):
-            n_grid += 1
-
-            try:
-                img = slide.read_region(
-                    (int(x), int(y)),
-                    0,
-                    (args.tile_size, args.tile_size),
-                ).convert("RGB")
-            except Exception:
-                n_failed += 1
-                continue
-
-            tfra = tissue_fraction(img)
-            now = time.time()
-
-            if n_grid % args.progress_every == 0 or now - last > 60:
-                print(
-                    f"{name} | "
-                    f"grid={n_grid} "
-                    f"tissue={n_tissue} "
-                    f"tumor={n_tumor} "
-                    f"failed={n_failed} "
-                    f"elapsed={(now - t0) / 60:.1f}min",
-                    flush=True,
-                )
-                last = now
-
-            if tfra < args.min_tissue_fraction:
-                continue
-
-            n_tissue += 1
-
-            imgs.append(img)
-            metas.append(
-                {
-                    "slide_name": name,
-                    "x": int(x),
-                    "y": int(y),
-                    "tissue_fraction": float(tfra),
-                }
-            )
-
-            if len(imgs) >= args.read_batch_size:
-                flush()
-
-    flush()
-    slide.close()
-
-    df = pd.DataFrame(rows)
-    df.to_csv(patch_csv, index=False, encoding="utf-8-sig")
-
-    if n_tumor > 0:
-        probs = (
-            df.loc[df["is_tumor_associated"] == 1, "FH_probability"]
-            .dropna()
-            .astype(float)
-            .values
-        )
-        final = float(np.mean(probs))
-        pred = int(final >= args.fh_cutoff)
-        status = "OK"
-    else:
-        final = np.nan
-        pred = ""
-        status = "NO_TUMOR_PATCHES"
-
-    res = {
-        "slide_name": name,
-        "slide_path": slide_path,
-        "status": status,
-        "width": W,
-        "height": H,
-        "tile_size": args.tile_size,
-        "step_size": args.step_size,
-        "min_tissue_fraction": args.min_tissue_fraction,
-        "tumor_threshold": args.tumor_threshold,
-        "fh_cutoff": args.fh_cutoff,
-        "n_grid_patches": n_grid,
-        "n_tissue_patches": n_tissue,
-        "n_tumor_patches": n_tumor,
-        "tumor_fraction": n_tumor / max(n_tissue, 1),
-        "final_fh_probability": final,
-        "final_prediction": "FH" if pred == 1 else "nonFH" if pred == 0 else "",
-        "final_pred_label_0.5": pred,
-        "patch_predictions_csv": patch_csv,
-        "heatmap_png": heatmap,
-        "elapsed_minutes": (time.time() - t0) / 60,
-    }
-
-    pd.DataFrame([res]).to_csv(result_csv, index=False, encoding="utf-8-sig")
-
-    if status == "OK":
-        make_heatmap(df, final, name, heatmap)
-
-    print(
-        f"Done: {name} | "
-        f"status={status} | "
-        f"FH_prob={final} | "
-        f"pred={res['final_prediction']} | "
-        f"elapsed={res['elapsed_minutes']:.1f}min",
-        flush=True,
-    )
-
-    return res
-
-
-def main():
-    ap = argparse.ArgumentParser(
-        description=(
-            "Complete WCH-FHPM workflow: tissue filtering, tumor detector, "
-            "FH predictor, heatmap."
-        )
-    )
-
-    ap.add_argument("--slide", default="")
-    ap.add_argument("--slide_dir", default="")
-    ap.add_argument("--out_dir", required=True)
-
-    ap.add_argument("--models_dir", default="")
-    ap.add_argument("--tumor_model", default="")
-    ap.add_argument("--fh_model", default="")
-
-    ap.add_argument("--tile_size", type=int, default=512)
-    ap.add_argument("--step_size", type=int, default=512)
-    ap.add_argument("--min_tissue_fraction", type=float, default=0.20)
-
-    ap.add_argument("--tumor_threshold", type=float, default=0.20)
-    ap.add_argument("--fh_cutoff", type=float, default=0.50)
-
-    ap.add_argument("--read_batch_size", type=int, default=128)
-    ap.add_argument("--batch_size", type=int, default=128)
-    ap.add_argument("--progress_every", type=int, default=1000)
-
-    ap.add_argument("--device", default="cuda", choices=["cuda", "cpu"])
-
-    args = ap.parse_args()
-
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-
-    args.models_dir = args.models_dir or os.path.join(script_dir, "models")
-    args.tumor_model = args.tumor_model or os.path.join(
-        args.models_dir,
-        "WCH_TumorDetector_ViTBase512.pth",
-    )
-    args.fh_model = args.fh_model or os.path.join(
-        args.models_dir,
-        "WCH_FHPM_ViTBase512.pth",
-    )
-
-    os.makedirs(args.out_dir, exist_ok=True)
-
-    device = torch.device(
-        "cuda" if args.device == "cuda" and torch.cuda.is_available() else "cpu"
-    )
-
-    tumor_model, tumor_info = load_model(args.tumor_model, device)
-    fh_model, fh_info = load_model(args.fh_model, device)
-
-    if torch.cuda.device_count() > 1 and device.type == "cuda":
-        print(f"Using DataParallel on {torch.cuda.device_count()} GPUs", flush=True)
-        tumor_model = torch.nn.DataParallel(tumor_model)
-        fh_model = torch.nn.DataParallel(fh_model)
-
-    run_config = {
-        "tumor_model": args.tumor_model,
-        "fh_model": args.fh_model,
-        "tile_size": args.tile_size,
-        "step_size": args.step_size,
-        "min_tissue_fraction": args.min_tissue_fraction,
-        "tumor_threshold": args.tumor_threshold,
-        "fh_cutoff": args.fh_cutoff,
-        "device": str(device),
-    }
-
-    with open(
-        os.path.join(args.out_dir, "run_config.json"),
-        "w",
-        encoding="utf-8",
-    ) as f:
-        json.dump(run_config, f, indent=2, ensure_ascii=False)
-
-    slides = [args.slide] if args.slide else find_slides(args.slide_dir) if args.slide_dir else []
-
-    if not slides:
-        raise ValueError("Please provide --slide or --slide_dir")
-
-    results = []
-
-    for s in slides:
-        try:
-            results.append(
-                process_slide(
-                    s,
-                    args,
-                    tumor_model,
-                    tumor_info,
-                    fh_model,
-                    fh_info,
-                    device,
-                )
-            )
-        except Exception as e:
-            print(f"[FAILED] {s}: {e}", flush=True)
-            results.append(
-                {
-                    "slide_name": os.path.basename(s),
-                    "slide_path": s,
-                    "status": "FAILED",
-                    "error": str(e),
-                }
-            )
-
-        pd.DataFrame(results).to_csv(
-            os.path.join(args.out_dir, "all_slide_results.csv"),
-            index=False,
-            encoding="utf-8-sig",
-        )
-
-    print("All done.")
-    print("Summary:", os.path.join(args.out_dir, "all_slide_results.csv"))
-
-
-if __name__ == "__main__":
-    main()
-=======
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-import argparse
-import hashlib
-import json
-import os
-import re
-import time
-from pathlib import Path
-
-import numpy as np
-import openslide
-import pandas as pd
-import timm
-import torch
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
-from torchvision import transforms
-
-
-SLIDE_EXTS = {".svs", ".ndpi", ".tif", ".tiff", ".mrxs", ".scn"}
-
-try:
-    RESAMPLING_NEAREST = Image.Resampling.NEAREST
-except AttributeError:
-    RESAMPLING_NEAREST = Image.NEAREST
-
-
-def safe_name(s, max_len=120):
-    s = str(s)
-    b = re.sub(r"[^A-Za-z0-9\u4e00-\u9fff._-]+", "_", s).strip("._-")
-    h = hashlib.md5(s.encode("utf-8", errors="ignore")).hexdigest()[:8]
-    return f"{b[:max_len]}__{h}"
-
-
-def find_slides(root):
-    return sorted(
-        str(p)
-        for p in Path(root).rglob("*")
-        if p.is_file() and p.suffix.lower() in SLIDE_EXTS
-    )
-
-
-def positive_index(label_mapping, task):
-    if not isinstance(label_mapping, dict) or not label_mapping:
-        return 1
-
-    def norm(x):
-        return str(x).lower().replace("_", "").replace("-", "").replace(" ", "")
-
-    lm = {norm(k): int(v) for k, v in label_mapping.items()}
-
-    if task == "fh":
-        if "fh" in lm:
-            return lm["fh"]  # exact match; avoids matching nonFH
-
-        for k, v in lm.items():
-            if not k.startswith("non") and k in {
-                "fhrcc",
-                "fhdrcc",
-                "fhdrrcc",
-                "fhdrc",
-            }:
-                return v
-
-        return 1
-
-    if task == "tumor":
-        for k in ["tumor", "tumour", "cancer", "neoplastic"]:
-            if k in lm:
-                return lm[k]
-
-        for k, v in lm.items():
-            if (
-                "normal" not in k
-                and not k.startswith("non")
-                and "negative" not in k
-                and ("tumor" in k or "tumour" in k)
-            ):
-                return v
-
-        return 1
-
-    return 1
-
-
-def load_model(path, device):
-    ckpt = torch.load(path, map_location="cpu", weights_only=False)
-
-    model_name = ckpt.get("model_name", "vit_base_patch16_224")
-    img_size = int(ckpt.get("img_size", 512))
-    num_classes = int(ckpt.get("num_classes", 2))
-
-    state = (
-        ckpt.get("state_dict")
-        or ckpt.get("model_state_dict")
-        or ckpt.get("model")
-        or ckpt
-    )
-
-    state = {
-        k.replace("module.", "", 1) if k.startswith("module.") else k: v
-        for k, v in state.items()
-    }
-
+def load_checkpoint(path: Path, map_location: torch.device) -> object:
+    try:
+        return torch.load(path, map_location=map_location, weights_only=False)
+    except TypeError:
+        return torch.load(path, map_location=map_location)
+
+
+def create_vit_base_model(num_classes: int = 2, img_size: int = 512) -> torch.nn.Module:
+    """Create the ViT-Base classifier used by the WCH-FHPM workflow."""
     model = timm.create_model(
-        model_name,
+        "vit_base_patch16_224",
         pretrained=False,
         num_classes=num_classes,
         img_size=img_size,
     )
-    model.load_state_dict(state, strict=True)
+    return model
+
+
+def load_model(model_path: Path, device: torch.device, img_size: int = 512) -> torch.nn.Module:
+    if not model_path.exists():
+        raise FileNotFoundError(
+            f"Model weight file not found: {model_path}\n"
+            "Download the required weight files from the release page and place them under the models/ folder."
+        )
+    checkpoint = load_checkpoint(model_path, map_location=device)
+    state_dict = extract_state_dict(checkpoint)
+    model = create_vit_base_model(num_classes=2, img_size=img_size)
+    missing, unexpected = model.load_state_dict(state_dict, strict=False)
+    if unexpected:
+        print(f"[Warning] Unexpected checkpoint keys in {model_path.name}: {unexpected[:10]}")
+    if missing:
+        print(f"[Warning] Missing checkpoint keys in {model_path.name}: {missing[:10]}")
     model.to(device)
     model.eval()
-
-    prep = ckpt.get("preprocess", {})
-    mean = prep.get("mean", prep.get("normalize_mean", [0.485, 0.456, 0.406]))
-    std = prep.get("std", prep.get("normalize_std", [0.229, 0.224, 0.225]))
-
-    info = {
-        "img_size": img_size,
-        "mean": mean,
-        "std": std,
-        "label_mapping": ckpt.get("label_mapping", {}),
-        "model_path": str(path),
-    }
-
-    return model, info
+    return model
 
 
-def build_tf(info):
-    return transforms.Compose(
-        [
-            transforms.Resize((info["img_size"], info["img_size"])),
-            transforms.ToTensor(),
-            transforms.Normalize(info["mean"], info["std"]),
-        ]
-    )
+def infer_probabilities(
+    model: torch.nn.Module,
+    images: Sequence[Image.Image],
+    transform: transforms.Compose,
+    device: torch.device,
+    batch_size: int,
+    positive_index: int = 1,
+) -> np.ndarray:
+    """Run model inference and return class-1 probabilities."""
+    if len(images) == 0:
+        return np.asarray([], dtype=np.float32)
 
-
-def tissue_fraction(img, sat_thr=20, gray_high=245, gray_low=10):
-    a = np.asarray(img.convert("RGB"))
-
-    mx = a.max(2).astype(np.int16)
-    mn = a.min(2).astype(np.int16)
-    sat = mx - mn
-    gray = a.mean(2)
-
-    return float(((sat > sat_thr) & (gray < gray_high) & (gray > gray_low)).mean())
-
-
-def batch_predict(model, imgs, tf, device, pos, batch_size):
-    out = []
-
-    if not imgs:
-        return out
-
+    probs: List[np.ndarray] = []
     with torch.no_grad():
-        for i in range(0, len(imgs), batch_size):
-            x = torch.stack([tf(im) for im in imgs[i : i + batch_size]], 0).to(
-                device,
-                non_blocking=True,
-            )
-
-            with torch.cuda.amp.autocast(enabled=(device.type == "cuda")):
-                p = torch.softmax(model(x), 1)[:, pos].detach().cpu().numpy()
-
-            out += [float(v) for v in p]
-
-    return out
+        for start in range(0, len(images), batch_size):
+            batch_imgs = images[start : start + batch_size]
+            tensor = torch.stack([transform(img) for img in batch_imgs], dim=0).to(device)
+            logits = model(tensor)
+            prob = F.softmax(logits, dim=1)[:, positive_index]
+            probs.append(prob.detach().cpu().numpy().astype(np.float32))
+    return np.concatenate(probs, axis=0)
 
 
-def get_font(size, bold=False):
-    font_paths = [
-        (
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-            if bold
-            else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-        ),
-        (
-            "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf"
-            if bold
-            else "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf"
-        ),
-    ]
-
-    for p in font_paths:
-        if os.path.exists(p):
-            return ImageFont.truetype(p, size)
-
-    return ImageFont.load_default()
-
-
-def interp(c1, c2, t):
-    return tuple(
-        np.clip(np.array(c1) * (1 - t) + np.array(c2) * t, 0, 255)
-        .astype(np.uint8)
-        .tolist()
-    )
-
-
-def color_prob(p):
-    p = float(np.clip(0.5 + 1.18 * (float(np.clip(p, 0, 1)) - 0.5), 0, 1))
-
-    anchors = [
-        (0, (32, 72, 192)),
-        (0.25, (92, 140, 230)),
-        (0.5, (247, 245, 242)),
-        (0.75, (239, 126, 92)),
-        (1, (197, 26, 44)),
-    ]
-
-    for (p1, c1), (p2, c2) in zip(anchors[:-1], anchors[1:]):
-        if p1 <= p <= p2:
-            return interp(c1, c2, (p - p1) / (p2 - p1))
-
-    return anchors[-1][1]
-
-
-def rr_mask(size, r):
-    m = Image.new("L", size, 0)
-    d = ImageDraw.Draw(m)
-    d.rounded_rectangle((0, 0, size[0] - 1, size[1] - 1), radius=r, fill=255)
-    return m
-
-
-def center_text(draw, xy, text, font, fill):
-    b = draw.textbbox((0, 0), text, font=font)
-    draw.text(
-        (xy[0] - (b[2] - b[0]) / 2, xy[1] - (b[3] - b[1]) / 2),
-        text,
-        font=font,
-        fill=fill,
-    )
+def write_json(path: Path, obj: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(obj, f, indent=2, ensure_ascii=False)
 
 
 def make_heatmap(
-    patch_df,
-    final_prob,
-    slide_name,
-    out_png,
-    canvas_w=1600,
-    canvas_h=1400,
-):
-    df = patch_df[(patch_df["is_tumor_associated"] == 1)].copy()
-    df["FH_probability"] = pd.to_numeric(df["FH_probability"], errors="coerce")
-    df = df.dropna(subset=["FH_probability"])
+    records: pd.DataFrame,
+    slide_width: int,
+    slide_height: int,
+    tile_size: int,
+    step_size: int,
+    out_path: Path,
+) -> None:
+    """Create a simple patch-grid FH probability heatmap using PIL only."""
+    if records.empty or "FH_probability" not in records.columns:
+        return
 
-    if len(df) == 0:
-        return None
+    n_cols = max(1, math.ceil(max(slide_width - tile_size, 0) / step_size) + 1)
+    n_rows = max(1, math.ceil(max(slide_height - tile_size, 0) / step_size) + 1)
 
-    xs = np.sort(df.x.unique())
-    ys = np.sort(df.y.unique())
-    xi = {x: i for i, x in enumerate(xs)}
-    yi = {y: i for i, y in enumerate(ys)}
+    # Keep heatmap reasonably sized.
+    max_side = 2000
+    cell = max(1, min(max_side // max(n_cols, 1), max_side // max(n_rows, 1)))
+    width = n_cols * cell
+    height = n_rows * cell
 
-    grid = np.full((len(ys), len(xs), 3), 255, dtype=np.uint8)
+    img = Image.new("RGB", (width, height), "white")
+    draw = ImageDraw.Draw(img)
 
-    for _, r in df.iterrows():
-        grid[yi[r.y], xi[r.x]] = color_prob(r.FH_probability)
+    for _, row in records.iterrows():
+        try:
+            fh_prob = float(row["FH_probability"])
+        except (TypeError, ValueError):
+            continue
+        if not np.isfinite(fh_prob):
+            continue
 
-    raw = Image.fromarray(grid, "RGB")
-    bg = Image.new("RGBA", (canvas_w, canvas_h), (248, 248, 250, 255))
+        x = int(row["x"])
+        y = int(row["y"])
+        col = max(0, min(n_cols - 1, x // step_size))
+        rr = max(0, min(n_rows - 1, y // step_size))
 
-    # Card shadow
-    shadow = Image.new("RGBA", bg.size, (0, 0, 0, 0))
-    sd = ImageDraw.Draw(shadow)
-    sd.rounded_rectangle(
-        (36, 46, canvas_w - 36, canvas_h - 26),
-        radius=34,
-        fill=(0, 0, 0, 42),
-    )
-    shadow = shadow.filter(ImageFilter.GaussianBlur(16))
-    bg.alpha_composite(shadow)
-
-    # Card
-    card = Image.new("RGBA", (canvas_w - 72, canvas_h - 72), (255, 255, 255, 255))
-    bg.paste(card, (36, 36), rr_mask(card.size, 34))
-
-    draw = ImageDraw.Draw(bg)
-    title = get_font(34, True)
-    probfont = get_font(30, True)
-    tickfont = get_font(20, False)
-
-    center_text(
-        draw,
-        (canvas_w // 2, 92),
-        "Heatmap of the Prediction",
-        title,
-        (25, 30, 40),
-    )
-
-    hx, hy, hw, hh = 105, 165, 1130, 980
-
-    panel = Image.new("RGBA", (hw, hh), (252, 252, 253, 255))
-    bg.paste(panel, (hx, hy), rr_mask((hw, hh), 22))
-
-    draw.rounded_rectangle(
-        (hx, hy, hx + hw, hy + hh),
-        radius=22,
-        outline=(232, 234, 238),
-        width=2,
-    )
-
-    aw, ah = hw - 40, hh - 40
-    rw, rh = raw.size
-    sc = min(aw / rw, ah / rh)
-
-    nw = max(1, int(rw * sc))
-    nh = max(1, int(rh * sc))
-
-    fit = raw.resize((nw, nh), RESAMPLING_NEAREST)
-
-    mx = hx + 20 + (aw - nw) // 2
-    my = hy + 20 + (ah - nh) // 2
-
-    bg.paste(fit, (mx, my))
-
-    # Colorbar
-    cbx, cby, cbw, cbh = 1290, 240, 62, 740
-
-    cb = Image.new("RGB", (cbw, cbh), "white")
-    cd = ImageDraw.Draw(cb)
-
-    for j in range(cbh):
-        cd.line((0, j, cbw, j), fill=color_prob(1 - j / max(cbh - 1, 1)))
-
-    bg.paste(cb, (cbx, cby), rr_mask((cbw, cbh), 12))
-    draw = ImageDraw.Draw(bg)
-
-    for t in [0.2, 0.4, 0.6, 0.8]:
-        ty = cby + int((1 - t) * cbh)
-        draw.line(
-            (cbx + cbw + 8, ty, cbx + cbw + 20, ty),
-            fill=(90, 94, 102),
-            width=2,
-        )
-        draw.text(
-            (cbx + cbw + 28, ty - 11),
-            f"{t:.1f}",
-            font=tickfont,
-            fill=(88, 92, 98),
+        # Blue-white-red style without matplotlib dependency.
+        # Low FH: blue; high FH: red.
+        p = max(0.0, min(1.0, fh_prob))
+        if p < 0.5:
+            t = p / 0.5
+            r = int(255 * t)
+            g = int(255 * t)
+            b = 255
+        else:
+            t = (p - 0.5) / 0.5
+            r = 255
+            g = int(255 * (1.0 - t))
+            b = int(255 * (1.0 - t))
+        draw.rectangle(
+            [col * cell, rr * cell, (col + 1) * cell - 1, (rr + 1) * cell - 1],
+            fill=(r, g, b),
         )
 
-    prefix = "Predicted probability of FHdRCC: "
-    risk = "high risk" if final_prob >= 0.5 else "low risk"
-    val = f"{final_prob:.3f} ({risk})"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    img.save(out_path)
 
-    bw = draw.textbbox((0, 0), prefix, font=probfont)[2]
-    vw = draw.textbbox((0, 0), val, font=probfont)[2]
 
-    x = (canvas_w - bw - vw) // 2
-    y = 1248
+# -----------------------------------------------------------------------------
+# Main slide-processing workflow
+# -----------------------------------------------------------------------------
 
-    draw.text((x, y), prefix, font=probfont, fill=(18, 28, 44))
-    draw.text(
-        (x + bw, y),
-        val,
-        font=probfont,
-        fill=(153, 0, 52) if final_prob >= 0.5 else (22, 84, 153),
-    )
-
-    os.makedirs(os.path.dirname(out_png), exist_ok=True)
-    bg.convert("RGB").save(out_png, quality=95)
-
-    return out_png
+def generate_grid(width: int, height: int, tile_size: int, step_size: int) -> Iterable[Tuple[int, int]]:
+    max_x = max(0, width - tile_size)
+    max_y = max(0, height - tile_size)
+    ys = list(range(0, max_y + 1, step_size))
+    xs = list(range(0, max_x + 1, step_size))
+    if ys[-1] != max_y:
+        ys.append(max_y)
+    if xs[-1] != max_x:
+        xs.append(max_x)
+    for y in ys:
+        for x in xs:
+            yield x, y
 
 
 def process_slide(
-    slide_path,
-    args,
-    tumor_model,
-    tumor_info,
-    fh_model,
-    fh_info,
-    device,
-):
-    name = os.path.basename(slide_path)
-    uid = safe_name(Path(name).stem)
-    outdir = os.path.join(args.out_dir, uid)
-    os.makedirs(outdir, exist_ok=True)
+    slide_path: Path,
+    out_dir: Path,
+    tumor_model: torch.nn.Module,
+    fh_model: torch.nn.Module,
+    transform: transforms.Compose,
+    device: torch.device,
+    tile_size: int,
+    step_size: int,
+    min_tissue_fraction: float,
+    tumor_threshold: float,
+    fh_cutoff: float,
+    read_batch_size: int,
+    batch_size: int,
+    save_heatmap: bool,
+) -> Dict[str, object]:
+    start_time = time.time()
+    slide_name = safe_slide_name(slide_path)
+    slide_out_dir = out_dir / slide_name
+    slide_out_dir.mkdir(parents=True, exist_ok=True)
 
-    patch_csv = os.path.join(outdir, "patch_predictions.csv")
-    result_csv = os.path.join(outdir, "slide_result.csv")
-    heatmap = os.path.join(outdir, "FH_probability_heatmap.png")
+    print(f"\n[Slide] {slide_path}")
+    print(f"[Output] {slide_out_dir}")
 
-    t0 = time.time()
+    records: List[Dict[str, object]] = []
+    n_grid_patches = 0
+    n_tissue_patches = 0
+    n_tumor_patches = 0
 
-    slide = openslide.OpenSlide(slide_path)
-    W, H = slide.dimensions
+    slide = openslide.OpenSlide(str(slide_path))
+    width, height = slide.dimensions
 
-    tumor_tf = build_tf(tumor_info)
-    fh_tf = build_tf(fh_info)
+    batch_tiles: List[Image.Image] = []
+    batch_meta: List[Tuple[int, int, float]] = []
 
-    tumor_pos = positive_index(tumor_info.get("label_mapping", {}), "tumor")
-    fh_pos = positive_index(fh_info.get("label_mapping", {}), "fh")
-
-    print(
-        f"\n===== Slide: {name} =====\n"
-        f"Size: {W} x {H}\n"
-        f"tumor_pos_index={tumor_pos}; fh_pos_index={fh_pos}",
-        flush=True,
-    )
-
-    rows = []
-    imgs = []
-    metas = []
-
-    n_grid = 0
-    n_tissue = 0
-    n_failed = 0
-    n_tumor = 0
-
-    last = time.time()
-
-    def flush():
-        nonlocal imgs, metas, rows, n_tumor
-
-        if not imgs:
+    def flush_batch() -> None:
+        nonlocal n_tumor_patches, records, batch_tiles, batch_meta
+        if not batch_tiles:
             return
 
-        tps = batch_predict(
+        tumor_probs = infer_probabilities(
             tumor_model,
-            imgs,
-            tumor_tf,
+            batch_tiles,
+            transform,
             device,
-            tumor_pos,
-            args.batch_size,
+            batch_size=batch_size,
+            positive_index=1,
+        )
+        is_tumor = tumor_probs >= tumor_threshold
+
+        tumor_tiles = [img for img, keep in zip(batch_tiles, is_tumor) if bool(keep)]
+        fh_probs_for_tumor = infer_probabilities(
+            fh_model,
+            tumor_tiles,
+            transform,
+            device,
+            batch_size=batch_size,
+            positive_index=1,
         )
 
-        tims = []
-        trows = []
-
-        for im, meta, tp in zip(imgs, metas, tps):
-            is_t = int(tp >= args.tumor_threshold)
-
-            row = dict(meta)
-            row.update(
-                {
-                    "tumor_probability": float(tp),
-                    "is_tumor_associated": is_t,
-                    "FH_probability": np.nan,
-                }
-            )
-
-            if is_t:
-                tims.append(im)
-                trows.append(row)
+        tumor_idx = 0
+        for (x, y, tissue_fraction), tumor_prob, keep in zip(batch_meta, tumor_probs, is_tumor):
+            if bool(keep):
+                fh_prob = float(fh_probs_for_tumor[tumor_idx])
+                tumor_idx += 1
+                n_tumor_patches += 1
             else:
-                rows.append(row)
+                fh_prob = np.nan
 
-        if tims:
-            fps = batch_predict(
-                fh_model,
-                tims,
-                fh_tf,
-                device,
-                fh_pos,
-                args.batch_size,
-            )
-
-            for row, fp in zip(trows, fps):
-                row["FH_probability"] = float(fp)
-                rows.append(row)
-                n_tumor += 1
-
-        imgs = []
-        metas = []
-
-    for y in range(0, max(1, H - args.tile_size + 1), args.step_size):
-        for x in range(0, max(1, W - args.tile_size + 1), args.step_size):
-            n_grid += 1
-
-            try:
-                img = slide.read_region(
-                    (int(x), int(y)),
-                    0,
-                    (args.tile_size, args.tile_size),
-                ).convert("RGB")
-            except Exception:
-                n_failed += 1
-                continue
-
-            tfra = tissue_fraction(img)
-            now = time.time()
-
-            if n_grid % args.progress_every == 0 or now - last > 60:
-                print(
-                    f"{name} | "
-                    f"grid={n_grid} "
-                    f"tissue={n_tissue} "
-                    f"tumor={n_tumor} "
-                    f"failed={n_failed} "
-                    f"elapsed={(now - t0) / 60:.1f}min",
-                    flush=True,
-                )
-                last = now
-
-            if tfra < args.min_tissue_fraction:
-                continue
-
-            n_tissue += 1
-
-            imgs.append(img)
-            metas.append(
+            records.append(
                 {
-                    "slide_name": name,
+                    "slide_name": slide_path.name,
                     "x": int(x),
                     "y": int(y),
-                    "tissue_fraction": float(tfra),
+                    "tissue_fraction": float(tissue_fraction),
+                    "tumor_probability": float(tumor_prob),
+                    "is_tumor_associated": bool(keep),
+                    "FH_probability": fh_prob,
                 }
             )
 
-            if len(imgs) >= args.read_batch_size:
-                flush()
+        batch_tiles = []
+        batch_meta = []
 
-    flush()
+    for x, y in generate_grid(width, height, tile_size, step_size):
+        n_grid_patches += 1
+        tile = read_tile(slide, x, y, tile_size)
+        tissue_fraction = get_tissue_fraction(tile)
+        if tissue_fraction < min_tissue_fraction:
+            continue
+
+        n_tissue_patches += 1
+        batch_tiles.append(tile)
+        batch_meta.append((x, y, tissue_fraction))
+
+        if len(batch_tiles) >= read_batch_size:
+            flush_batch()
+
+    flush_batch()
     slide.close()
 
-    df = pd.DataFrame(rows)
-    df.to_csv(patch_csv, index=False, encoding="utf-8-sig")
+    patch_df = pd.DataFrame.from_records(records)
+    patch_csv = slide_out_dir / "patch_predictions.csv"
+    patch_df.to_csv(patch_csv, index=False)
 
-    if n_tumor > 0:
-        probs = (
-            df.loc[df["is_tumor_associated"] == 1, "FH_probability"]
-            .dropna()
-            .astype(float)
-            .values
-        )
-        final = float(np.mean(probs))
-        pred = int(final >= args.fh_cutoff)
-        status = "OK"
+    if n_tumor_patches > 0:
+        final_prob = float(patch_df.loc[patch_df["is_tumor_associated"], "FH_probability"].mean())
+        final_label = int(final_prob >= fh_cutoff)
+        final_prediction = "FH-dRCC" if final_label == 1 else "non-FH-dRCC"
+        status = "success"
     else:
-        final = np.nan
-        pred = ""
-        status = "NO_TUMOR_PATCHES"
+        final_prob = np.nan
+        final_label = np.nan
+        final_prediction = "NA"
+        status = "no_tumor_associated_patches"
 
-    res = {
-        "slide_name": name,
-        "slide_path": slide_path,
+    elapsed_minutes = (time.time() - start_time) / 60.0
+    result = {
+        "slide_name": slide_path.name,
+        "slide_path": str(slide_path),
         "status": status,
-        "width": W,
-        "height": H,
-        "tile_size": args.tile_size,
-        "step_size": args.step_size,
-        "min_tissue_fraction": args.min_tissue_fraction,
-        "tumor_threshold": args.tumor_threshold,
-        "fh_cutoff": args.fh_cutoff,
-        "n_grid_patches": n_grid,
-        "n_tissue_patches": n_tissue,
-        "n_tumor_patches": n_tumor,
-        "tumor_fraction": n_tumor / max(n_tissue, 1),
-        "final_fh_probability": final,
-        "final_prediction": "FH" if pred == 1 else "nonFH" if pred == 0 else "",
-        "final_pred_label_0.5": pred,
-        "patch_predictions_csv": patch_csv,
-        "heatmap_png": heatmap,
-        "elapsed_minutes": (time.time() - t0) / 60,
+        "slide_width": int(width),
+        "slide_height": int(height),
+        "n_grid_patches": int(n_grid_patches),
+        "n_tissue_patches": int(n_tissue_patches),
+        "n_tumor_patches": int(n_tumor_patches),
+        "tissue_fraction_among_grid": float(n_tissue_patches / n_grid_patches) if n_grid_patches else np.nan,
+        "tumor_fraction_among_tissue": float(n_tumor_patches / n_tissue_patches) if n_tissue_patches else np.nan,
+        "final_fh_probability": final_prob,
+        "final_prediction": final_prediction,
+        f"final_pred_label_{fh_cutoff}": final_label,
+        "elapsed_minutes": float(elapsed_minutes),
     }
 
-    pd.DataFrame([res]).to_csv(result_csv, index=False, encoding="utf-8-sig")
+    pd.DataFrame([result]).to_csv(slide_out_dir / "slide_result.csv", index=False)
 
-    if status == "OK":
-        make_heatmap(df, final, name, heatmap)
+    if save_heatmap and not patch_df.empty:
+        make_heatmap(
+            patch_df,
+            slide_width=width,
+            slide_height=height,
+            tile_size=tile_size,
+            step_size=step_size,
+            out_path=slide_out_dir / "FH_probability_heatmap.png",
+        )
 
     print(
-        f"Done: {name} | "
-        f"status={status} | "
-        f"FH_prob={final} | "
-        f"pred={res['final_prediction']} | "
-        f"elapsed={res['elapsed_minutes']:.1f}min",
-        flush=True,
+        f"[Done] {slide_path.name}: status={status}, "
+        f"tumor_patches={n_tumor_patches}, final_fh_probability={final_prob}"
     )
+    return result
 
-    return res
 
+def main() -> None:
+    args = parse_args()
+    script_dir = Path(__file__).resolve().parent
+    out_dir = Path(args.out_dir).resolve()
+    out_dir.mkdir(parents=True, exist_ok=True)
 
-def main():
-    ap = argparse.ArgumentParser(
-        description=(
-            "Complete WCH-FHPM workflow: tissue filtering, tumor detector, "
-            "FH predictor, heatmap."
-        )
-    )
+    # Resolve default model paths relative to the script directory, so the command
+    # can be launched from either the repository folder or another working directory.
+    tumor_model_path = resolve_path(args.tumor_model, base_dir=script_dir)
+    fh_model_path = resolve_path(args.fh_model, base_dir=script_dir)
 
-    ap.add_argument("--slide", default="")
-    ap.add_argument("--slide_dir", default="")
-    ap.add_argument("--out_dir", required=True)
+    if args.device == "cuda" and not torch.cuda.is_available():
+        print("[Warning] CUDA was requested but is not available. Falling back to CPU.")
+        device = torch.device("cpu")
+    else:
+        device = torch.device(args.device)
 
-    ap.add_argument("--models_dir", default="")
-    ap.add_argument("--tumor_model", default="")
-    ap.add_argument("--fh_model", default="")
-
-    ap.add_argument("--tile_size", type=int, default=512)
-    ap.add_argument("--step_size", type=int, default=512)
-    ap.add_argument("--min_tissue_fraction", type=float, default=0.20)
-
-    ap.add_argument("--tumor_threshold", type=float, default=0.20)
-    ap.add_argument("--fh_cutoff", type=float, default=0.50)
-
-    ap.add_argument("--read_batch_size", type=int, default=128)
-    ap.add_argument("--batch_size", type=int, default=128)
-    ap.add_argument("--progress_every", type=int, default=1000)
-
-    ap.add_argument("--device", default="cuda", choices=["cuda", "cpu"])
-
-    args = ap.parse_args()
-
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-
-    args.models_dir = args.models_dir or os.path.join(script_dir, "models")
-    args.tumor_model = args.tumor_model or os.path.join(
-        args.models_dir,
-        "WCH_TumorDetector_ViTBase512.pth",
-    )
-    args.fh_model = args.fh_model or os.path.join(
-        args.models_dir,
-        "WCH_FHPM_ViTBase512.pth",
-    )
-
-    os.makedirs(args.out_dir, exist_ok=True)
-
-    device = torch.device(
-        "cuda" if args.device == "cuda" and torch.cuda.is_available() else "cpu"
-    )
-
-    tumor_model, tumor_info = load_model(args.tumor_model, device)
-    fh_model, fh_info = load_model(args.fh_model, device)
-
-    if torch.cuda.device_count() > 1 and device.type == "cuda":
-        print(f"Using DataParallel on {torch.cuda.device_count()} GPUs", flush=True)
-        tumor_model = torch.nn.DataParallel(tumor_model)
-        fh_model = torch.nn.DataParallel(fh_model)
-
-    run_config = {
-        "tumor_model": args.tumor_model,
-        "fh_model": args.fh_model,
-        "tile_size": args.tile_size,
-        "step_size": args.step_size,
-        "min_tissue_fraction": args.min_tissue_fraction,
-        "tumor_threshold": args.tumor_threshold,
-        "fh_cutoff": args.fh_cutoff,
-        "device": str(device),
-    }
-
-    with open(
-        os.path.join(args.out_dir, "run_config.json"),
-        "w",
-        encoding="utf-8",
-    ) as f:
-        json.dump(run_config, f, indent=2, ensure_ascii=False)
-
-    slides = [args.slide] if args.slide else find_slides(args.slide_dir) if args.slide_dir else []
+    if args.slide:
+        slides = [Path(args.slide).resolve()]
+    else:
+        slides = find_slides(Path(args.slide_dir).resolve())
 
     if not slides:
-        raise ValueError("Please provide --slide or --slide_dir")
+        raise FileNotFoundError("No supported whole-slide image files were found.")
 
-    results = []
+    print(f"[Info] Number of slides: {len(slides)}")
+    print(f"[Info] Device: {device}")
+    print(f"[Info] Tumor detector: {tumor_model_path}")
+    print(f"[Info] FH predictor: {fh_model_path}")
+    print(
+        f"[Info] tumor_threshold={args.tumor_threshold}. "
+        f"For a two-class softmax tumor detector, this excludes patches with "
+        f"predicted normal-tissue probability > {1.0 - args.tumor_threshold:.2f}."
+    )
 
-    for s in slides:
+    transform = build_transform(args.tile_size)
+    tumor_model = load_model(tumor_model_path, device=device, img_size=args.tile_size)
+    fh_model = load_model(fh_model_path, device=device, img_size=args.tile_size)
+
+    run_config = vars(args).copy()
+    run_config.update(
+        {
+            "resolved_tumor_model": str(tumor_model_path),
+            "resolved_fh_model": str(fh_model_path),
+            "device_resolved": str(device),
+            "n_slides": len(slides),
+            "tumor_threshold_note": (
+                "A tumor-associated probability threshold of 0.20 corresponds to excluding patches "
+                "with predicted normal-tissue probability greater than 0.80."
+            ),
+        }
+    )
+    write_json(out_dir / "run_config.json", run_config)
+
+    # Copy optional model_config.json content into the output folder if available.
+    config_path = resolve_path(args.config, base_dir=script_dir)
+    if config_path.exists():
         try:
-            results.append(
-                process_slide(
-                    s,
-                    args,
-                    tumor_model,
-                    tumor_info,
-                    fh_model,
-                    fh_info,
-                    device,
-                )
-            )
-        except Exception as e:
-            print(f"[FAILED] {s}: {e}", flush=True)
-            results.append(
-                {
-                    "slide_name": os.path.basename(s),
-                    "slide_path": s,
-                    "status": "FAILED",
-                    "error": str(e),
-                }
-            )
+            with open(config_path, "r", encoding="utf-8") as f:
+                config_obj = json.load(f)
+            write_json(out_dir / "model_config_used.json", config_obj)
+        except Exception as exc:
+            print(f"[Warning] Could not copy model_config.json: {exc}")
 
-        pd.DataFrame(results).to_csv(
-            os.path.join(args.out_dir, "all_slide_results.csv"),
-            index=False,
-            encoding="utf-8-sig",
-        )
+    all_results: List[Dict[str, object]] = []
+    for slide_path in slides:
+        try:
+            result = process_slide(
+                slide_path=slide_path,
+                out_dir=out_dir,
+                tumor_model=tumor_model,
+                fh_model=fh_model,
+                transform=transform,
+                device=device,
+                tile_size=args.tile_size,
+                step_size=args.step_size,
+                min_tissue_fraction=args.min_tissue_fraction,
+                tumor_threshold=args.tumor_threshold,
+                fh_cutoff=args.fh_cutoff,
+                read_batch_size=args.read_batch_size,
+                batch_size=args.batch_size,
+                save_heatmap=args.save_heatmap,
+            )
+        except Exception as exc:
+            print(f"[Error] Failed to process {slide_path}: {exc}")
+            result = {
+                "slide_name": slide_path.name,
+                "slide_path": str(slide_path),
+                "status": "error",
+                "error_message": str(exc),
+            }
+        all_results.append(result)
+        pd.DataFrame(all_results).to_csv(out_dir / "all_slide_results.csv", index=False)
 
-    print("All done.")
-    print("Summary:", os.path.join(args.out_dir, "all_slide_results.csv"))
+    print(f"\n[Finished] Summary saved to: {out_dir / 'all_slide_results.csv'}")
 
 
 if __name__ == "__main__":
     main()
->>>>>>> 16e8c11e175de65394360c69a18aa6090b08807d

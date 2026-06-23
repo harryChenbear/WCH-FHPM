@@ -1,22 +1,20 @@
 # Complete Workflow of WCH-FHPM
 
-This repository provides a complete inference workflow for **WCH-FHPM**, a whole-slide image analysis model for FH-deficient renal cell carcinoma research.
+This repository provides a complete inference workflow for **WCH-FHPM**, a whole-slide image analysis model for FH-deficient renal cell carcinoma (FH-dRCC) research.
 
-The workflow starts from a whole-slide image and generates:
+The workflow starts from a whole-slide image (WSI) and generates:
 
 1. tissue-filtered image patches by background removal,
 2. tumor-associated patch detection using the tumor detector,
-3. FH probability prediction using the FH predictor,
-4. slide-level FH probability,
-5. patch-level FH probability heatmap.
+3. FH-dRCC probability prediction using the FH predictor,
+4. slide-level FH-dRCC probability,
+5. patch-level FH-dRCC probability heatmap.
 
-This repository is intended for **research use only**. It is not intended for clinical diagnosis or treatment decision-making.
+This repository is intended for **research use only**. It is not intended for clinical diagnosis, treatment selection, or patient management.
 
 ---
 
 ## Workflow overview
-
-The complete workflow includes the following steps:
 
 ```text
 Whole-slide image
@@ -28,16 +26,16 @@ Tissue filtering / background removal
 Tumor-associated patch detection
         |
         v
-FH probability prediction on tumor-associated patches
+FH-dRCC probability prediction on tumor-associated patches
         |
         v
 Slide-level aggregation
         |
         v
-CSV outputs and FH probability heatmap
+CSV outputs and FH-dRCC probability heatmap
 ```
 
-The final slide-level FH probability is calculated as the mean FH probability across tumor-associated patches.
+The final slide-level FH-dRCC probability is calculated as the mean FH-dRCC probability across tumor-associated patches.
 
 ---
 
@@ -63,7 +61,20 @@ models/WCH_TumorDetector_ViTBase512.pth
 models/WCH_FHPM_ViTBase512.pth
 ```
 
-If the model weights are distributed separately, please download them and place them in the `models/` folder before running the workflow.
+The required model weight files, **WCH_FHPM_ViTBase512.pth** and **WCH_TumorDetector_ViTBase512.pth**, can be downloaded from the GitHub release page:
+
+```text
+https://github.com/harryChenbear/WCH-FHPM/releases/tag/1.0
+```
+
+After downloading, place them under the `models/` folder as follows:
+
+```text
+Complete workflow of WCH-FHPM/
+└── models/
+    ├── WCH_TumorDetector_ViTBase512.pth
+    └── WCH_FHPM_ViTBase512.pth
+```
 
 ---
 
@@ -86,8 +97,10 @@ Number of classes: 2
 Classes:
   normal_tissue: 0
   tumor_associated_tissue: 1
-Recommended tumor threshold: 0.20
+Recommended tumor-associated threshold: 0.20
 ```
+
+The default `--tumor_threshold` is **0.20**. In the two-class tumor detector, the tumor-associated probability and normal-tissue probability sum to 1. Therefore, a tumor-associated probability threshold of 0.20 corresponds to excluding patches with a predicted normal-tissue probability greater than 0.80. This conservative threshold removes patches that are highly likely to represent normal renal tissue while retaining ambiguous, mixed, stromal, or tumor-adjacent patches for downstream WCH-FHPM analysis.
 
 ### FH predictor
 
@@ -95,7 +108,7 @@ Recommended tumor threshold: 0.20
 models/WCH_FHPM_ViTBase512.pth
 ```
 
-This model predicts FH probability on tumor-associated H&E image patches.
+This model predicts FH-dRCC probability on tumor-associated H&E image patches.
 
 Main metadata:
 
@@ -106,7 +119,7 @@ Number of classes: 2
 Classes:
   nonFH: 0
   FH: 1
-Default cutoff: 0.50
+Default slide-level cutoff: 0.50
 Slide-level aggregation: mean patch probability
 ```
 
@@ -162,7 +175,10 @@ The workflow supports common whole-slide image formats, including:
 .tiff
 .mrxs
 .scn
+.kfb
 ```
+
+The current implementation is recommended for 40× H&E-stained WSIs scanned at approximately 0.225 μm/pixel. Lower-resolution images can be processed, but performance may be less balanced.
 
 ---
 
@@ -218,12 +234,14 @@ python run_wch_fhpm.py \
 Main parameters:
 
 ```text
---tile_size             Patch size. Default: 512
+--tile_size              Patch size. Default: 512
 --step_size             Step size for patch extraction. Default: 512
 --min_tissue_fraction   Minimum tissue fraction for retaining a patch. Default: 0.20
 --tumor_threshold       Threshold for tumor-associated patch selection. Default: 0.20
---fh_cutoff             Cutoff for slide-level FH classification. Default: 0.50
---read_batch_size       Number of patches read before model inference. Default: 128
+                         A value of 0.20 corresponds to excluding patches with
+                         predicted normal-tissue probability > 0.80.
+--fh_cutoff             Cutoff for slide-level FH-dRCC classification. Default: 0.50
+--read_batch_size       Number of tissue patches read before model inference. Default: 128
 --batch_size            Model inference batch size. Default: 128
 --device                cuda or cpu. Default: cuda
 ```
@@ -260,6 +278,7 @@ The workflow also saves the runtime configuration:
 
 ```text
 run_config.json
+model_config_used.json
 ```
 
 ---
@@ -268,9 +287,7 @@ run_config.json
 
 ### `patch_predictions.csv`
 
-Patch-level prediction results.
-
-Main columns include:
+Patch-level prediction results. Main columns include:
 
 ```text
 slide_name
@@ -284,9 +301,7 @@ FH_probability
 
 ### `slide_result.csv`
 
-Slide-level prediction result for one slide.
-
-Main columns include:
+Slide-level prediction result for one slide. Main columns include:
 
 ```text
 slide_name
@@ -294,7 +309,7 @@ status
 n_grid_patches
 n_tissue_patches
 n_tumor_patches
-tumor_fraction
+tumor_fraction_among_tissue
 final_fh_probability
 final_prediction
 final_pred_label_0.5
@@ -307,7 +322,7 @@ Summary of slide-level prediction results for all processed slides.
 
 ### `FH_probability_heatmap.png`
 
-Patch-level FH probability heatmap generated from tumor-associated patches.
+Patch-level FH-dRCC probability heatmap generated from tumor-associated patches.
 
 ---
 
@@ -316,15 +331,17 @@ Patch-level FH probability heatmap generated from tumor-associated patches.
 The default slide-level interpretation is:
 
 ```text
-final_fh_probability >= 0.5  -> FH
-final_fh_probability <  0.5  -> nonFH
+final_fh_probability >= 0.5  -> FH-dRCC high-risk prediction
+final_fh_probability < 0.5   -> non-FH-dRCC low-risk prediction
 ```
 
 The final probability is calculated as:
 
 ```text
-mean FH probability over tumor-associated patches
+mean FH-dRCC probability over tumor-associated patches
 ```
+
+High-risk predictions should be interpreted together with histomorphology and, when appropriate, confirmatory FH/2SC immunohistochemistry and molecular testing.
 
 ---
 
@@ -338,10 +355,4 @@ The released inference package does not include training slides, patient data, t
 
 ## Research use only
 
-This repository is provided for research use only.
-
-The outputs of this workflow should not be used as the sole basis for clinical diagnosis, treatment selection, or patient management.
-
----
-
-
+This repository is provided for research use only. The outputs of this workflow should not be used as the sole basis for clinical diagnosis, treatment selection, or patient management.
