@@ -52,6 +52,12 @@ The three steps above describe the basic process for using the website’s AI mo
 2. Although the prediction model shows high accuracy in our previous testing, the results should only be used as a reference and should not be considered as the evidence of the final diagnosis. The standard diagnosis of FH-dRCC should rely on the gold standard.
 3. Despite extensive testing, the platform may still have areas needing improvement or maintenance. If any issues arise, please contact the team leader via email at WCH_FHPM@163.com for feedback.
 
-![Online platform](Fig.png)
+![Figure 5](Figure%205.png)
 
-![Online platform](image.png)
+**Figure 5. Development of the online platform based on WCH-FHPM and its performance in proof-of-concept validation.**
+
+(A) Illustration of the online platform. To support clinical adoption of WCH-FHPM, we developed a user-friendly web platform (https://wchrcc.ai4ss.com/) based on the model, which allows users to upload H&E WSIs and predict the probability of FH-dRCC by WCH-FHPM.
+
+(B) The performance of the platform in the proof-of-concept validation, evaluated using ROC curves, along with sensitivity, specificity, PPV, and NPV metrics. The proof-of-concept validation study was conducted in collaboration with the Rare Kidney Cancer Collaborative Group, the Genitourinary Cancer Committee, and the China Anti-Cancer Association.
+
+*H&E: Hematoxylin and eosin; WSIs: Whole slide images; FH-dRCC: fumarate hydratase-deficient renal cell carcinoma; WCH-FHPM: West China Hospital FH-dRCC predictive model; ROC: Receiver operating characteristic; PPV: Positive predictive value; NPV: Negative predictive value.*
